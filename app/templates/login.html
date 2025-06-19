@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %} Login {% endblock %}
+
+{% block content %}
+
+    <div class="d-flex justify-content-center">
+        <div class="card" style="margin-top: 2em; width: 30rem;">
+            <div class="card-header">
+                <h2 class="text-center"><b>Login</b></h2>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-danger alert-dismissable" role="alert">
+                            {{ messages[0] }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                <form method="POST" class="form-login">
+                    {{ form.csrf_token }}
+
+                    <div class="row mb-1">
+                        {{form.username.label(class="fw-bold")}}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            {{form.username(class="form-control", placeholder="Enter your username") }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-1">
+                        {{form.password.label(class="fw-bold")}}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            {{form.password(class="form-control", placeholder="Enter your password") }}
+                        </div>
+                    </div> 
+
+                    <div class="text-center">
+                        {{form.submit(class="btn btn-block btn-primary") }}
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

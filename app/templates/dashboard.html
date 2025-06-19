@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %} Dashboard {% endblock %}
+
+{% block content %}
+
+<style>
+
+table thead tr#filterRow th {
+    padding: 4px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+table thead tr#filterRow th input {
+    width: 100% !important;
+    padding: 3px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+    box-sizing: border-box;
+}
+
+#spinner:not([hidden]) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#spinner::after {
+  content: "";
+  width: 80px;
+  height: 80px;
+  border: 2px solid #f3f3f3;
+  border-top: 3px solid #f25a41;
+  border-radius: 100%;
+  will-change: transform;
+  animation: spin 1s infinite linear
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+</style>
+
+<div class="card" style="margin-top: 2em; margin-bottom: 2em;">
+    <div class="card-header">
+        <h2><b>Client List</b></h2>
+    </div>
+    <div class="card-body">
+        <table id="ContactTable" class="table table-hover table-striped table-bordered" style="width:100%">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Contact Name</th>
+                    <th>Organization</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div hidden id="spinner"></div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        DataTable.Buttons.defaults.dom.button.className = 'btn';
+
+        const spinner = document.getElementById("spinner");
+        
+        $('#ContactTable').DataTable({
+            ajax: {
+                url: '/api/contacts?bypass_cache=false',
+                dataSrc: function (jsonArray) {
+                    let combinedContacts = [];
+                    jsonArray.forEach(response => {
+                        if (response && response.Contacts) {
+                            combinedContacts = combinedContacts.concat(response.Contacts.map(contact => ({ ...contact, Tenant: response.Tenant })));
+                        }
+                    });
+                    return combinedContacts;
+                }
+            },
+            columns: [
+                {
+                    data: null,
+                    orderable: false,
+                    render: DataTable.render.select()
+                },
+                {data: 'Name', title: 'Contact Name'},
+                {data: 'Tenant', title: 'Organization'},
+            ],
+            columnDefs: [
+                { 
+                    targets: 1,
+                    width: '55%',
+                    type: 'string'
+                }  
+            ],
+            processing: true,
+            layout: {
+                
+                top1Start: {
+                    buttons: [
+                        {
+                            text: 'Reload',
+                            className: 'btn-secondary',
+                            action: function (e, dt, node, config) {
+                                dt.ajax.url('/api/contacts?bypass_cache=true').load();
+                            }
+                        }
+                    ]
+                },
+                top1End: {
+                    buttons: [
+                        {
+                            text: 'Generate',
+                            className: 'btn-primary',
+                            action: function ( e, dt, node, config ) {
+
+                                let selectedData = dt.rows('.selected').data().toArray();
+
+                                if (selectedData.length > 0) {
+
+                                    spinner.removeAttribute('hidden');
+
+                                    let selectedRows = selectedData.map(contact => ({
+                                        ContactID: contact.ContactID,
+                                        Tenant: contact.Tenant,
+                                        ContactName: contact.Name
+                                    }));
+
+                                    $.ajax({
+                                        url: `/redirect_statement`,
+                                        method: 'POST',
+                                        contentType: 'application/json',
+                                        data: JSON.stringify(selectedRows),
+                                        success: function (response) {
+
+                                            spinner.setAttribute('hidden', '');
+
+                                            if (response.redirect_url) {
+                                                
+                                                window.location.href = response.redirect_url;
+
+                                            } else {
+
+                                                alert('Error: Invalid redirect URL received.');
+                                                
+                                            }
+                                        },
+                                        error: function (xhr, status, error) {
+
+                                            spinner.setAttribute('hidden', '');
+
+                                            let errorMessage = 'An unknown error occurred.'; // Default error message
+
+                                            try {
+                                                // Try to parse the responseText as JSON
+                                                const responseJson = JSON.parse(xhr.responseText);
+
+                                                // Check if the 'error' key exists in the parsed JSON
+                                                if (responseJson && responseJson.error) {
+                                                    errorMessage = responseJson.error;
+                                                } else {
+                                                    // If it's JSON but doesn't have the 'error' key, show the raw JSON
+                                                    errorMessage = 'Server returned an error, but no specific message. Raw response: ' + xhr.responseText;
+                                                }
+                                            } catch (e) {
+                                                // If responseText is not valid JSON, it might be plain text or HTML
+                                                if (xhr.responseText) {
+                                                    errorMessage = 'Server error: ' + xhr.responseText;
+                                                } else {
+                                                    // Fallback for network issues or truly empty responses
+                                                    errorMessage = 'Network error or no response from server. Status: ' + status + ', Error: ' + error;
+                                                }
+                                            }
+
+                                            alert('Error: ' + errorMessage); // Display the specific error message
+                                            console.error('AJAX Error:', status, error);
+                                            console.error('Server Response:', xhr.responseText); // Log the full server response
+                                        }
+                                    });
+
+                                } else if (selectedData.length == 0) {
+
+                                    alert('No contact was selected.');
+
+                                } 
+                                
+                            }
+                        }
+                    ]
+                },
+                topStart: 'pageLength',
+                topEnd: 'search',
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
+            select: {
+                style: 'multi',
+                selector: 'td:first-child',
+                headerCheckbox: 'select-page'
+            },
+            order: [[1, 'asc']],
+            fixedColumns: {
+                start: 1
+            },
+            scrollX: true,
+            initComplete: function() {
+                var api = this.api();
+                var $thead = $(api.table().header());
+
+                // Create filter row
+                var $filterRow = $('<tr id="filterRow">');
+                
+                api.columns().every(function(index) {
+                    var column = this;
+                    var $th = $('<th>')
+                        .addClass('filter-cell')
+                        .css('min-width', column.header().style.minWidth);
+
+                    if (index === 0) {
+                        // Checkbox column (no filter)
+                        $th.html('&nbsp;');
+                    } else {
+                        $th.html('<input type="text" placeholder="Search '+$(column.header()).text()+'" />');
+                    }
+                    
+                    $filterRow.append($th);
+                });
+
+                // Insert filter row after header row
+                $thead.append($filterRow);
+
+                // Apply search functionality
+                $filterRow.find('input').on('keyup change', function() {
+                    var colIdx = $(this).closest('th').index();
+                    api.column(colIdx).search(this.value).draw();
+                });
+            }
+        });
+
+    });
+
+</script>
+
+{% endblock %}

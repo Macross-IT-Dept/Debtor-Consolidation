@@ -1,0 +1,21 @@
+# IDE specific (VS Code)
+.vscode/
+
+# Flask specific
+instance/
+migrations/
+
+# Environment stuff
+venv/
+.env     
+
+# Folders inside app
+app/__pycache__/
+app/data/         
+app/refresh_token/ 
+
+
+
+
+
+

@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+
+{% block title %} Statement {% endblock %}
+
+{% block content %}
+
+<style>
+
+tr.dtrg-end th{
+    background-color: #ffffff !important;
+    text-align: right !important; 
+}
+
+</style>
+
+<div class="card" style="margin-top: 2em; margin-bottom: 2em;">
+    <div class="card-header">
+        <h2><b>Consolidated Statement - ID: {{statement_id}}</b></h2>
+    </div>
+    <div class="card-body">
+        <table id="StatementTable" class="table table-bordered" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Contact</th>
+                    <th>Organization</th>
+                    <th>Invoice No</th>
+                    <th>Invoice Details</th>
+                    <th>Amount Due (RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    $(document).ready(function () {
+
+        DataTable.Buttons.defaults.dom.button.className = 'btn';
+
+        //For bolding certain text in sentences (PDFMake)
+        function createStyledText(boldPart, regularPart, additionalStyles = {}) {
+            return [
+                { text: boldPart, bold: true },
+                { text: regularPart, ...additionalStyles }
+            ];
+        }
+        
+        $('#StatementTable').DataTable({
+            ajax: {
+                url: `/api/statement?statement_id=${'{{ statement_id }}'}`,
+                dataSrc: function (jsonArray) {
+                    let combinedInvoices = [];
+                    let tenant_key = null;
+                    jsonArray.forEach(response => {
+                        if (response && response.Invoices) {
+
+                            if (response.Tenant == "Macross Consultancy (M) Sdn Bhd") {
+
+                                tenant_key = "Macross";
+                            
+                            } else if (response.Tenant == "Macross Consultancy Pte Ltd") {
+
+                                tenant_key = "Macross SG";
+
+                            } else if (response.Tenant == "Co Maker Sdn Bhd") {
+
+                                tenant_key = "Co Maker";
+
+                            } else if (response. Tenant == "C.T & Co (Ekoflora Branch)") {
+
+                                tenant_key = "C.T & Co";
+
+                            } else if (response. Tenant == "Cheng & Associates Secretarial PLT") {
+
+                                tenant_key = "Cheng & Associates";
+
+                            }
+
+                            combinedInvoices = combinedInvoices.concat(response.Invoices.map(invoice => ({ ...invoice, Tenant: tenant_key })));
+                        }
+                    });
+                    return combinedInvoices;
+                }
+            },
+            columns: [
+                {data: 'Contact.Name', title: 'Contact'},
+                {data: 'Tenant', title: 'Organization', width:'13%'},
+                {data: 'InvoiceNumber', title: 'Invoice No', width:'12%'},
+                {
+                    data: 'LineItems.0.Description',
+                    title: 'Invoice Details',
+                    width:'59%',
+                    render: function (data, type, row) {
+
+                        let formattedData = data.replace(/\n/g, '<br>');
+
+                        if (type === 'display' && data) {
+
+                            if (row.Tenant != "Cheng & Associates") {
+
+                                const linkUrl = `/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`;
+
+                                return `<a href="${linkUrl}" target="_blank">${formattedData}</a>`;
+
+                            }
+                            
+                        }
+                        return formattedData; 
+                    }
+                },
+                {data: 'AmountDue', title: 'Amount Due (RM)', width:'16%'},
+            ],
+            columnDefs: [
+                {
+                    targets: [4],
+                    render: $.fn.dataTable.render.number( ',', '.', 2 )
+                },
+                {
+                    targets: [0],
+                    visible: false
+                }
+            ],
+            responsive: {
+                details: {
+                    renderer: function (api, rowIdx, columns) {
+                        let data = columns
+                            .map((col, i) => {
+                                return col.hidden
+                                    ? '<p><b>' + col.title + ': &nbsp;' + '</b>' + col.data + '</p>' : '';
+                            })
+                            .join('');
+        
+                        let table = document.createElement('table');
+                        table.innerHTML = data;
+        
+                        return data ? table : false;
+                    }
+                }
+            },  
+            orderFixed: [0, 'asc'],
+            order: [[2, 'asc']],
+            rowGroup: {
+                dataSrc: 'Contact.Name',
+                endRender: function (rows, group) {
+
+                    const totalAmountDue = rows
+                        .data()
+                        .pluck('AmountDue')
+                        .reduce((acc, amount) => acc + parseFloat(amount), 0);
+                    
+                    const formattedSum = DataTable.render.number(',', '.', 2, 'RM ').display(totalAmountDue);
+
+                    return (
+                        'Total: ' + 
+                        formattedSum
+                    );
+
+                }
+            },
+            layout: {
+                top1End: {
+                    buttons: [
+                        {
+                            extend: 'pdfHtml5',
+                            text: 'PDF',
+                            className: 'btn-danger',
+                            filename: function() { 
+                                return `\nConsolidated Statement - ${'{{ statement_id }}'}`
+                            },
+                            exportOptions: {
+                                columns: ':visible',
+                                format: {
+                                    body: function (data, rowIdx, columnIdx, node) {
+                                        // Keep existing format handling
+                                        if ($(node).hasClass('dtrg-group')) {
+                                            return "Group: " + data;
+                                        } else if ($(node).hasClass('dtrg-end')) {
+                                            return "Total: " + data;
+                                        }
+                                        return data;
+                                    }
+                                }
+                            },
+                            customize: function (doc) {
+
+                                // doc.content.splice(0, 1);
+                                 
+                                // 1. Force reset default styles
+                                doc.defaultStyle = {
+                                    fillColor: '#ffffff', // WHITE background for all rows
+                                    color: 'black',
+                                    fontSize: 10
+                                };
+
+                                doc.content.splice(0, 1, {
+                                    text: ''
+                                }); 
+
+                                // 2. Build content with explicit styles
+                                var rows = [];
+                                var currentGroup = null;
+                                var groupTotal = 0;
+
+                                const hostname = window.location.hostname;
+                                const port = window.location.port;
+
+                                let PDF_URL = '';
+
+                                if (port != null) {
+
+                                    PDF_URL = hostname + ':' + port;
+
+                                } else {
+
+                                    PDF_URL = hostname;
+
+                                }
+
+                                // Add column headers
+                                rows.push([
+                                    { text: 'Organization', style: 'tableHeader' },
+                                    { text: 'Invoice No', style: 'tableHeader' },
+                                    { text: 'Invoice Details', style: 'tableHeader' },
+                                    { text: 'Amount Due (RM)', style: 'tableHeader' }
+                                ]);
+
+                                $('#StatementTable').DataTable().rows().every(function () {
+                                    var row = this.data();
+                                    var group = row.Contact.Name;
+
+                                    if (group !== currentGroup) {
+                                        if (currentGroup !== null) {
+                                            // Add total row (no background)
+                                            rows.push([
+                                                '',
+                                                '',
+                                                { text: 'Total:', style: 'totalText', alignment: 'right' },
+                                                { text: 'RM ' + groupTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                            ]);
+                                        }
+                                        // Add NEW GROUP HEADER with grey
+                                        rows.push([
+                                            { 
+                                                text: group, 
+                                                colSpan: 4, 
+                                                style: 'groupHeader',
+                                                margin: [0, 5, 0, 5] // Add spacing
+                                            },
+                                            '', '', ''
+                                        ]);
+                                        currentGroup = group;
+                                        groupTotal = 0;
+                                    }
+
+                                    if (row.Tenant != "Cheng & Associates"){
+                                        // Regular rows (force white background)
+                                        rows.push([
+                                            { text: row.Tenant, style: 'cellStyle' },
+                                            { text: row.InvoiceNumber, style: 'cellStyle' },
+                                            { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellStyle', color: '#4286f4' },
+                                            { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountStyle' }
+                                        ]);
+
+                                    } else {
+                                        // Regular rows (force white background)
+                                        rows.push([
+                                            { text: row.Tenant, style: 'cellStyle' },
+                                            { text: row.InvoiceNumber, style: 'cellStyle' },
+                                            { text: row.LineItems[0].Description, style: 'cellStyle' },
+                                            { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountStyle' }
+                                        ]);
+                                    }
+
+                                    
+
+                                    groupTotal += parseFloat(row.AmountDue);
+                                });
+
+                                // Add final total
+                                if (currentGroup !== null) {
+                                    rows.push([
+                                        '', '',
+                                        { text: 'Total:', style: 'totalText', alignment: 'right' },
+                                        { text: 'RM ' + groupTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                    ]);
+                                }
+
+                                // 3. Define explicit styles
+                                doc.styles = {
+                                    groupHeader: {
+                                        fillColor: '#f2f2f2', // GREY only here
+                                        bold: true,
+                                        fontSize: 12,
+                                        color: 'black'
+                                    },
+                                    tableHeader: {
+                                        bold: true,
+                                        fontSize: 11,
+                                        fillColor: '#ffffff', // White background
+                                        color: 'black'
+                                    },
+                                    cellStyle: {
+                                        fillColor: '#ffffff', // Force white
+                                        color: 'black'
+                                    },
+                                    amountStyle: {
+                                        alignment: 'right',
+                                        fillColor: '#ffffff' // White
+                                    },
+                                    totalText: {
+                                        bold: true,
+                                        fillColor: '#ffffff' // White
+                                    }
+                                };
+
+                                // 4. Replace content
+                                doc.content[1].table = {
+                                    body: rows,
+                                    widths: ['15%','17%','48%','20%']
+                                }
+
+                                doc.content.splice(2, 1, {
+                                    text: [
+                                            { text: '\n\n- - Payment methods listed at the end - -', bold:true, alignment: 'center'}
+                                    ]
+                                }); 
+                            
+                                // --- ADD THE "LAST PAGE" CONTENT HERE ---
+                                doc.content.push({
+                                    pageBreak: 'before', // This forces a new page before this content
+                                    text: [
+                                            { text: 'Payment Methods:', bold:true, fontSize: 12 },
+
+                                            { text: '\n\nKindly send us a crossed cheque or credit payment to our respective companies:'},
+
+                                            { text: '\n\n1. Macross Consultancy (M) Sdn Bhd \nA/C Number: ' },
+                                            { text: createStyledText('365 000 33777', '\nBeneficiary Bank: ') },
+                                            { text: createStyledText('Hong Leong Bank') },
+
+                                            { text: '\n\n2. Macross Consultancy Pte Ltd \nA/C Number: ' },
+                                            { text: createStyledText('593074883001', '\nBeneficiary Bank: ') },
+                                            { text: createStyledText('OCBC Bank' ,'\nBranch: ') },
+                                            { text: createStyledText('OCBC Suntec City Branch') },
+
+                                            { text: '\n\n3. Co Maker Sdn Bhd \nA/C Number: ' },
+                                            { text: createStyledText('7161171467', '\nBeneficiary Bank: ') },
+                                            { text: createStyledText('OCBC Bank (Malaysia) Berhad') },
+
+                                            { text: '\n\n4. C.T & Co \nA/C Number: ' },
+                                            { text: createStyledText('7161159858', '\nBeneficiary Bank: ') },
+                                            { text: createStyledText('OCBC Bank (Malaysia) Berhad') },
+
+                                            { text: '\n\n5. Cheng & Associates Secretarial PLT \nA/C Number: ' },
+                                            { text: createStyledText('37800089073', '\nBeneficiary Bank: ') },
+                                            { text: createStyledText('Hong Leong Bank') },
+                                    ]
+                                });
+                                // --- END OF LAST PAGE CONTENT ---
+                            
+                            }
+                        }
+                    ]
+                },
+                topStart: 'info',
+                topEnd: null,
+                bottomStart: null,
+                bottomEnd: null
+            },
+            paging: false
+        });
+
+    });
+
+</script>
+
+{% endblock %}
