@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %} User {% endblock %}
+
+{% block content %}
+
+<style>
+
+ul {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+</style>
+
+<div class="card" style="margin-top: 2em; margin-bottom: 2em;">
+    <div class="card-header">
+        <h2><b>Account Profile - {{user.username}}</b></h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="EditAccount_form">
+                
+            {{ form.csrf_token }}
+
+            <div class="row mb-1">
+                <div class="col-12">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% set category, message = messages[0] %} 
+                            <div class="alert alert-{{category}} alert-dismissable" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+
+            <div class="row mb-1">
+                {{form.username.label(class="fw-bold") }}
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    {{form.username(class="form-control", placeholder=user.username, disabled=true)}}
+                </div>
+            </div>
+
+            <div class="row mb-1">
+                {{form.password.label(class="fw-bold") }}
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    {{form.password(class="form-control", placeholder="Enter Password") }}
+                </div>
+            </div>
+
+            <div class="row mb-1">
+                {{form.confirm_password.label(class="fw-bold") }}
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    {{form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+                    {% for error in form.confirm_password.errors %}
+                        <ul class = "mt-2"><span style="color: red;"><li>{{ error }}</li></span></ul>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="text-center">
+                        {{form.submit(class="btn btn-block btn-success", style="width: 80px;") }}
+                        <a class="btn btn-secondary" href="{{ url_for('dashboard') }}" style="width: 80px">Back</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

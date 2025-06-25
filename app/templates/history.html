@@ -40,7 +40,7 @@
             },
             columns: [
                 { data: 'id', title: 'ID', width:'5%' },
-                { data: 'description', title: 'Description', width: '70%' },
+                { data: 'description', title: 'Description', width: '65%' },
                 { data: 'created_at', title: 'Created At', width: '15%' },
                 { data: 'created_by', title: 'Created By', width: '10%' },
                 {
@@ -52,7 +52,7 @@
                     render: function (data, type, row) {
                         if (type === 'display') {
                             const linkUrl = `/statement?statement_id=${row.id}`;
-                            return `<a href="${linkUrl}" class="btn btn-primary btn-sm">View</a>`;
+                            return `<a href="${linkUrl}" class="btn btn-primary btn-sm"><i class="fa-solid fa-eye"></i>&nbsp;View</a>`;
                         }
                         return null;
                     }

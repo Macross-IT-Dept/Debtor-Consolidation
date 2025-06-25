@@ -1,7 +1,7 @@
 import json, os
 from flask import render_template, redirect, url_for, flash, jsonify, request, abort
 from app import db, cache, user_create_secret_key
-from .forms import LoginForm, CreateUserForm
+from .forms import LoginForm, CreateUserForm, EditUserForm
 from .models import User, Statement
 from flask_login import login_user, logout_user, login_required, current_user
 from .XeroController import XeroContactRequests, XeroInvoiceRequests
@@ -450,7 +450,7 @@ def history_data():
         })
     return jsonify(history_list)
 
-# User page
+# Users page
 @login_required
 @admin_required
 def user_page():
@@ -463,7 +463,135 @@ def user_page():
         db.session.commit()
         return redirect(url_for('user_page'))      
 
-    return render_template('user.html', form = form)
+    return render_template('users.html', form = form)
+
+# Users editing page
+@login_required
+@admin_required
+def user_edit_page():
+
+    user_id = request.args.get('user_id')
+
+    user = User.query.get(user_id)
+
+    if user:
+
+        form = EditUserForm()
+
+        form.user_id.data = user.id
+
+        if request.method == "POST" and form.validate(): 
+
+            # To check if the fields are empty
+            username_input_provided = form.username.data is not None and form.username.data.strip() != '' 
+            password_input_provided = form.password.data is not None and form.password.data != ''
+            role_input_provided = form.role.data is not None and form.role.data != ''
+
+            changes_made = False
+
+            if not username_input_provided and \
+                not password_input_provided and \
+                not role_input_provided:
+                    
+                    flash('All fields are empty.', 'warning')
+
+                    return render_template('edit_user.html', user=user, form=form)
+            
+            if username_input_provided:
+                new_username = form.username.data.strip() # Get the stripped value for comparison
+                if user.username != new_username:
+                    user.username = new_username
+                    changes_made = True
+
+            if password_input_provided:
+                # Hash the new password before storing it
+                user.password_hash = form.password.data
+                changes_made = True
+            
+            if role_input_provided:
+                # Only update if a new role was explicitly selected and it's different from current
+                if user.role != form.role.data:
+                    user.role = form.role.data
+                    changes_made = True
+            
+            # If no actual changes were detected for valid inputs
+            if not changes_made:
+                flash('No changes were made to the user.', 'info')
+                return render_template('edit_user.html', user=user, form=form)
+
+            try:
+                db.session.commit()
+                flash(f'User "{user.username}" updated successfully.', 'success')
+
+                return redirect(url_for('user_page'))
+            
+            except Exception as e:
+                db.session.rollback() # Rollback changes if commit fails
+
+                flash(f'Error updating user: {e}', 'danger')
+                # Log the error for detailed debugging
+                print(f"Database error updating user {user.username}: {e}") 
+                # Re-render the form with existing data and any validation errors (though form.validate() passed)
+                return render_template('edit_user.html', user=user, form=form)
+        
+        else:
+
+            return render_template('edit_user.html', user = user, form = form)
+        
+@login_required
+def account_edit_page():
+
+    account_id = request.args.get('account_id')
+
+    if int(account_id) != current_user.id:
+        abort(403)
+
+    user = User.query.get(account_id)
+
+    if user:
+
+        form = EditUserForm()
+
+        if request.method == "POST" and form.validate(): 
+
+            # To check if the fields are empty
+            password_input_provided = form.password.data is not None and form.password.data != ''
+
+            changes_made = False
+                    
+            if password_input_provided:
+                # Hash the new password before storing it
+                user.password_hash = form.password.data
+                changes_made = True
+
+            else:
+                flash('All fields are empty.', 'warning')
+
+                return render_template('edit_account.html', user=user, form=form)
+            
+            # If no actual changes were detected for valid inputs
+            if not changes_made:
+                flash('No changes were made to the user.', 'info')
+                return render_template('edit_account.html', user=user, form=form)
+
+            try:
+                db.session.commit()
+                flash(f'Update has been made successfully.', 'success')
+
+                return redirect(url_for('account_edit_page'), account_id=account_id, user=user, form=form)
+
+            except Exception as e:
+                db.session.rollback() # Rollback changes if commit fails
+
+                flash(f'Error updating user: {e}', 'danger')
+                # Log the error for detailed debugging
+                print(f"Database error updating user {user.username}: {e}") 
+                # Re-render the form with existing data and any validation errors (though form.validate() passed)
+                return render_template('edit_account.html', user=user, form=form)
+        
+        else:
+
+            return render_template('edit_account.html', user = user, form = form)
 
 # Logout user
 @login_required

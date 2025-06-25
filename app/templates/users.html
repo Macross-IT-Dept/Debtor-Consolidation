@@ -18,6 +18,14 @@ ul {
         <h2><b>Manage User</b></h2>
     </div>
     <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% set category, message = messages[0] %} 
+                <div class="alert alert-{{category}} alert-dismissable" role="alert">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endwith %}
         <table id="UserTable" class="table table-striped table-bordered" style="width:100%">
             <thead>
                 <tr>
@@ -53,7 +61,7 @@ ul {
                             <div class="col-12">
                                 {{form.username(class="form-control", placeholder="Enter username") }}
                                 {% for error in form.username.errors %}
-                                    <ul><span style="color: red;"><li>{{ error }}</li></span></ul>
+                                    <ul class = "mt-2"><span style="color: red;"><li>{{ error }}</li></span></ul>
                                 {% endfor %}
                             </div>
                         </div>
@@ -76,7 +84,7 @@ ul {
                             <div class="col-12">
                                 {{form.confirm_password(class="form-control", placeholder="Confirm Password") }}
                                 {% for error in form.confirm_password.errors %}
-                                    <ul><span style="color: red;"><li>{{ error }}</li></span></ul>
+                                    <ul class = "mt-2"><span style="color: red;"><li>{{ error }}</li></span></ul>
                                 {% endfor %}
                             </div>
                         </div>
@@ -97,7 +105,7 @@ ul {
                                     {% endfor %}
                                 </select>
                                 {% for error in form.role.errors %}
-                                    <ul><span style="color: red;"><li>{{ error }}</li></span></ul>
+                                    <ul class = "mt-2"><span style="color: red;"><li>{{ error }}</li></span></ul>
                                 {% endfor %}
                             </div>
                         </div>
@@ -142,7 +150,20 @@ ul {
                 },
                 {data: 'id', title: 'ID'},
                 {data: 'username', title: 'Username'},
-                {data: 'role', title: 'Role'}
+                {data: 'role', title: 'Role'},
+                {
+                    data: null,
+                    title: 'Actions',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        if (type === 'display') {
+                            const linkUrl = `{{url_for('user_edit_page')}}?user_id=${row.id}`;
+                            return `<a href="${linkUrl}" class="btn btn-success btn-sm"><i class="fas fa-edit"></i>&nbsp;Edit</a>`;
+                        }
+                        return null;
+                    }
+                }
             ],
             columnDefs: [
                 { 
@@ -155,14 +176,22 @@ ul {
                 },
                 { 
                     targets: 2,
-                    width: '50%'
-                }  
+                    width: '40%'
+                },
+                { 
+                    targets: 3,
+                    width: '25%'
+                },
+                { 
+                    targets: 4,
+                    width: '15%'
+                }      
             ],
             layout: {
                 top1Start: {
                     buttons: [
                         {
-                            text: 'Create',
+                            text: '<i class="fa-solid fa-plus"></i>&nbsp;Create',
                             className: 'btn-primary',
                             attr: {
                                 'data-bs-toggle': 'modal',
@@ -170,7 +199,7 @@ ul {
                             },
                         },
                         {
-                            text: 'Delete',
+                            text: '<i class="fa-solid fa-trash"></i>&nbsp;Delete',
                             className: 'btn-danger',
                             action: function ( e, dt, node, config ) {
                                 let selectedData = dt.rows('.selected').data().toArray();

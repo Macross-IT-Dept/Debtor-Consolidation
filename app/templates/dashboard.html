@@ -121,7 +121,7 @@ table thead tr#filterRow th input {
                 top1Start: {
                     buttons: [
                         {
-                            text: 'Reload',
+                            text: '<i class="fas fa-redo"></i>&nbsp;Reload',
                             className: 'btn-secondary',
                             action: function (e, dt, node, config) {
                                 dt.ajax.url('/api/contacts?bypass_cache=true').load();
@@ -132,7 +132,7 @@ table thead tr#filterRow th input {
                 top1End: {
                     buttons: [
                         {
-                            text: 'Generate',
+                            text: '<i class="fas fa-cog"></i>&nbsp;Generate',
                             className: 'btn-primary',
                             action: function ( e, dt, node, config ) {
 
