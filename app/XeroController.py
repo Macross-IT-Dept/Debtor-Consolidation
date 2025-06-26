@@ -76,7 +76,7 @@ def XeroRefreshToken(refresh_token):
                             },
                             data = {
                                 'grant_type' : 'refresh_token',
-                                'refresh_token' : refresh_token
+                                'refresh_token' : f"{refresh_token}"
                             })
     json_response = response.json()
     # print(json_response)
