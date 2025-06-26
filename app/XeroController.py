@@ -165,7 +165,7 @@ def XeroInvoiceRequests(data):
                 
                 continue
 
-            get_url = f"https://api.xero.com/api.xro/2.0/invoices?ContactIDs={contact['ContactID']}&where=AmountDue>0"
+            get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED&ContactIDs={contact['ContactID']}&where=AmountDue>0"
             response = requests.get(get_url,
                                 headers = {
                                     'Authorization': 'Bearer ' + new_tokens[0],
