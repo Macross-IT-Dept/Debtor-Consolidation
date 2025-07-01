@@ -36,9 +36,14 @@
 
                     <div class="row mb-3">
                         <div class="col-12">
-                            {{form.password(class="form-control", placeholder="Enter your password") }}
+                            <div class="input-group"> 
+                                {{form.password(class="form-control", placeholder="Enter your password") }}
+                                <span class="input-group-text password-toggle" id="togglePassword">
+                                    <i class="fas fa-eye-slash fa-fw"></i>
+                                </span>
+                            </div>
                         </div>
-                    </div> 
+                    </div>
 
                     <div class="text-center">
                         {{form.submit(class="btn btn-block btn-primary") }}
