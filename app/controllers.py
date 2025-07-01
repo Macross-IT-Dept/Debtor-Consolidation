@@ -125,7 +125,7 @@ def contacts_data():
     if bypass_cache:
 
         response = XeroContactRequests()
-        response.append(BukkuContactRequests())
+        # response.append(BukkuContactRequests())
 
         cache.set('contacts', response, timeout=1800)
 
@@ -142,7 +142,7 @@ def contacts_data():
         else:
 
             response = XeroContactRequests()
-            response.append(BukkuContactRequests())
+            # response.append(BukkuContactRequests())
             
             cache.set('contacts', response, timeout=1800)
 

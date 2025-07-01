@@ -72,7 +72,12 @@ ul {
 
                         <div class="row mb-3">
                             <div class="col-12">
-                                {{form.password(class="form-control", placeholder="Enter Password") }}
+                                <div class="input-group"> 
+                                    {{form.password(class="form-control", placeholder="Enter Password") }}
+                                    <span class="input-group-text password-toggle" id="togglePassword">
+                                        <i class="fas fa-eye-slash fa-fw"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -82,7 +87,12 @@ ul {
 
                         <div class="row mb-3">
                             <div class="col-12">
-                                {{form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+                                <div class="input-group"> 
+                                    {{form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+                                    <span class="input-group-text password-toggle" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye-slash fa-fw"></i>
+                                    </span>
+                                </div>
                                 {% for error in form.confirm_password.errors %}
                                     <ul class = "mt-2"><span style="color: red;"><li>{{ error }}</li></span></ul>
                                 {% endfor %}

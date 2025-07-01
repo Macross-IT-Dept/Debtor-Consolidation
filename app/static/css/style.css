@@ -19,4 +19,14 @@ body {
   color: #007bff;
 }
 
+.password-toggle {
+    cursor: pointer;
+    color: #999; /* Adjust icon color */
+    font-size: 0.9em; /* Adjust icon size */
+}
+
+.password-toggle:hover {
+    color: #333; /* Darker color on hover */
+}
+
 
