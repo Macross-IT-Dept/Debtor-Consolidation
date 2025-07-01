@@ -29,6 +29,10 @@ def index():
 
 # Login page   
 def login_page():
+
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
     form = LoginForm()
     if request.method == "POST" and form.validate(): 
         attempted_user = User.query.filter_by(username=form.username.data).first()
