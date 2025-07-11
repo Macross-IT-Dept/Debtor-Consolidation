@@ -25,7 +25,7 @@ tr.dtrg-end th{
                     <th>Organization</th>
                     <th>Invoice No</th>
                     <th>Invoice Details</th>
-                    <th>Amount Due (RM)</th>
+                    <th>Amount Due</th>
                 </tr>
             </thead>
             <tbody>
@@ -114,7 +114,7 @@ tr.dtrg-end th{
                         return formattedData; 
                     }
                 },
-                {data: 'AmountDue', title: 'Amount Due (RM)', width:'16%'},
+                {data: 'AmountDue', title: 'Amount Due', width:'16%'},
             ],
             columnDefs: [
                 {
@@ -176,8 +176,22 @@ tr.dtrg-end th{
                         .data()
                         .pluck('AmountDue')
                         .reduce((acc, amount) => acc + parseFloat(amount), 0);
+
+                    const tenantValue = rows.data().pluck('Tenant')[0];
+
+                    var currency = null;
+
+                    if (tenantValue === 'Macross SG'){
+
+                        currency = 'SGD ';
+
+                    } else {
+
+                        currency = 'RM ';
+
+                    }
                     
-                    const formattedSum = DataTable.render.number(',', '.', 2, 'RM ').display(totalAmountDue);
+                    const formattedSum = DataTable.render.number(',', '.', 2, currency).display(totalAmountDue);
 
                     // Calculate visible columns using the API on each render
                     const api = $('#StatementTable').DataTable(); 
@@ -241,20 +255,22 @@ tr.dtrg-end th{
                                 var rows = [];
                                 var currentGroup = null;
                                 var currentSubGroup = null;
+                                var currency = null;
                                 var groupTotal = 0;
 
                                 const hostname = window.location.hostname;
+                                const protocol = window.location.protocol;
                                 const port = window.location.port;
 
                                 let PDF_URL = '';
 
                                 if (port != null) {
 
-                                    PDF_URL = hostname + ':' + port;
+                                    PDF_URL = protocol + '//' + hostname + ':' + port;
 
                                 } else {
 
-                                    PDF_URL = hostname;
+                                    PDF_URL = protocol + '//' + hostname;
 
                                 }
 
@@ -263,7 +279,7 @@ tr.dtrg-end th{
                                     { text: 'Organization', style: 'tableHeader' },
                                     { text: 'Invoice No', style: 'tableHeader' },
                                     { text: 'Invoice Details', style: 'tableHeader' },
-                                    { text: 'Amount Due (RM)', style: 'tableHeader' }
+                                    { text: 'Amount Due', style: 'tableHeader' }
                                 ]);
 
                                 $('#StatementTable').DataTable().rows().every(function () {
@@ -274,10 +290,21 @@ tr.dtrg-end th{
                                     if (group !== currentGroup) {
                                         if (currentGroup !== null) {
                                             if (currentSubGroup !== null) {
+
+                                                if (currentSubGroup === 'Macross SG'){
+
+                                                    currency = 'SGD';
+
+                                                } else {
+
+                                                    currency = 'RM';
+
+                                                }
+
                                                 // Add total row (no background)
                                                 rows.push([
                                                     '', '',
-                                                    { text: 'Total for '+ currentSubGroup + ' (RM):', style: 'totalText', alignment: 'right' },
+                                                    { text: 'Total for '+ currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
                                                     { text: groupTotal.toFixed(2), style: 'amountStyle', bold: true }
                                                 ]);
                                             }
@@ -300,9 +327,20 @@ tr.dtrg-end th{
                                     if (subgroup !== currentSubGroup) {
                                         // If it's not the very first subgroup within this main group, add previous subgroup's total
                                         if (currentSubGroup !== null) {
+
+                                            if (currentSubGroup === 'Macross SG'){
+
+                                                currency = 'SGD';
+
+                                            } else {
+
+                                                currency = 'RM';
+
+                                            }
+
                                             rows.push([
                                                 '', '',
-                                                { text: 'Total for '+ currentSubGroup + ' (RM):', style: 'totalText', alignment: 'right' },
+                                                { text: 'Total for '+ currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
                                                 { text: groupTotal.toFixed(2), style: 'amountStyle', bold: true }
                                             ]);
                                         }
@@ -338,9 +376,20 @@ tr.dtrg-end th{
 
                                 // Add final total
                                 if (currentSubGroup !== null) {
+
+                                    if (currentSubGroup === 'Macross SG'){
+
+                                        currency = 'SGD';
+
+                                    } else {
+
+                                        currency = 'RM';
+
+                                    }
+
                                     rows.push([
                                         '', '',
-                                        { text: 'Total for '+ currentSubGroup + ' (RM):', style: 'totalText', alignment: 'right' },
+                                        { text: 'Total for '+ currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
                                         { text: groupTotal.toFixed(2), style: 'amountStyle', bold: true }
                                     ]);
                                 }
