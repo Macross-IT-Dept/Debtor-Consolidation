@@ -91,7 +91,20 @@ tr.dtrg-end th{
             columns: [
                 {data: 'Contact.Name', title: 'Contact'},
                 {data: 'Tenant', title: 'Organization', width:'13%'},
-                {data: 'InvoiceNumber', title: 'Invoice No', width:'12%'},
+                {
+                    data: 'InvoiceNumber', 
+                    title: 'Invoice No', 
+                    width:'12%',
+                    render: function (data, type, row) {
+
+                        if (row.Status == "DRAFT") {
+                            return data + "\n<b>(DRAFT)</b>";
+                        }
+
+                        return data;
+
+                    }
+                },
                 {
                     data: 'LineItems.0.Description',
                     title: 'Invoice Details',
@@ -349,15 +362,35 @@ tr.dtrg-end th{
                                         groupTotal = 0;
                                     }
 
-
                                     if (row.Tenant != "Cheng & Associates"){
-                                        // Regular rows (force white background)
-                                        rows.push([
-                                            { text: row.Tenant, style: 'cellStyle' },
-                                            { text: row.InvoiceNumber, style: 'cellStyle' },
-                                            { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellStyle', color: '#4286f4' },
-                                            { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountStyle' }
-                                        ]);
+
+                                        if (row.Status === "DRAFT"){
+
+                                            // Draft rows (force light grey background)
+                                            rows.push([
+                                                { text: row.Tenant, style: 'cellDraftStyle' },
+                                                { 
+                                                    text: [
+                                                        { text: row.InvoiceNumber },
+                                                        { text: "\n(DRAFT)", bold: true }
+                                                    ], 
+                                                    style: 'cellDraftStyle' 
+                                                },
+                                                { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellDraftStyle', color: '#4286f4' },
+                                                { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountDraftStyle' }
+                                            ]);
+
+                                        } else {
+
+                                            // Regular rows (force white background)
+                                            rows.push([
+                                                { text: row.Tenant, style: 'cellStyle' },
+                                                { text: row.InvoiceNumber, style: 'cellStyle' },
+                                                { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellStyle', color: '#4286f4' },
+                                                { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountStyle' }
+                                            ]);
+
+                                        }
 
                                     } else {
                                         // Regular rows (force white background)
@@ -415,6 +448,14 @@ tr.dtrg-end th{
                                     amountStyle: {
                                         alignment: 'right',
                                         fillColor: '#ffffff' // White
+                                    },
+                                    cellDraftStyle: {
+                                        fillColor: '#f1f1f1', // Light grey
+                                        color: 'black'
+                                    },
+                                    amountDraftStyle: {
+                                        alignment: 'right',
+                                        fillColor: '#f1f1f1' // Light grey
                                     },
                                     totalText: {
                                         bold: true,

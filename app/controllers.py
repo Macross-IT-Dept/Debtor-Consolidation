@@ -171,6 +171,8 @@ def redirect_statement():
 
     data = request.get_json()
 
+    draft_inclusion = request.args.get('draft')
+
     if data:
 
         # Old method - Writting the data into a temp file
@@ -244,7 +246,7 @@ def redirect_statement():
 
         if Xero_API == True:
 
-            xero_response = XeroInvoiceRequests(data)
+            xero_response = XeroInvoiceRequests(data, draft_inclusion)
 
             # Old method - Calling the xero invoices API internally
 
@@ -268,7 +270,8 @@ def redirect_statement():
                                 },
                                 "InvoiceID": invoice.get("InvoiceID"),
                                 "InvoiceNumber": invoice.get("InvoiceNumber"),
-                                "LineItems": []
+                                "LineItems": [],
+                                "Status": invoice.get("Status")
                             }
                             for line_item in invoice.get("LineItems", []):
                                 line_item_info = {

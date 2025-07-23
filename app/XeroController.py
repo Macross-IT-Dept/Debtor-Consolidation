@@ -112,7 +112,7 @@ def XeroContactRequests():
     return final_response
 
 # Xero API - Retrieve invoices from selected contacts
-def XeroInvoiceRequests(data):
+def XeroInvoiceRequests(data, draft_inclusion):
 
     # Old method - Reading the data from temp file (Called by the invoice function from controller through API internally)
 
@@ -165,7 +165,16 @@ def XeroInvoiceRequests(data):
                 
                 continue
 
-            get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED&ContactIDs={contact['ContactID']}&where=AmountDue>0"
+            get_url = ''
+
+            if draft_inclusion == 'true':
+
+                get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED,DRAFT&ContactIDs={contact['ContactID']}&where=AmountDue>0"
+
+            elif draft_inclusion == 'false':
+
+                get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED&ContactIDs={contact['ContactID']}&where=AmountDue>0"
+
             response = requests.get(get_url,
                                 headers = {
                                     'Authorization': 'Bearer ' + new_tokens[0],

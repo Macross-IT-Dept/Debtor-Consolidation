@@ -85,6 +85,7 @@ table thead tr#filterRow th input {
         DataTable.Buttons.defaults.dom.button.className = 'btn';
 
         const spinner = document.getElementById("spinner");
+        var draft_inclusion = false; 
         
         $('#ContactTable').DataTable({
             ajax: {
@@ -117,7 +118,6 @@ table thead tr#filterRow th input {
             ],
             processing: true,
             layout: {
-                
                 top1Start: {
                     buttons: [
                         {
@@ -131,6 +131,36 @@ table thead tr#filterRow th input {
                 },
                 top1End: {
                     buttons: [
+                        {
+                            text: '<i class="far fa-square"></i>&nbsp;Draft',
+                            className: 'btn-outline-success',
+                            attr: {
+                                'id': 'draft_button',
+                                'data-bs-toggle': "button"
+                            },
+                            action: function ( e, dt, node, config ) {
+
+                                const isToggledOn = node.hasClass('active');
+                                const iconElement = node.find('i');
+
+                                if (isToggledOn) {
+
+                                    draft_inclusion = true;
+                                    iconElement.removeClass('far fa-square').addClass('fa-solid fa-square-check');
+
+                                } else {
+
+                                    draft_inclusion = false;
+                                    iconElement.removeClass('fa-solid fa-square-check').addClass('far fa-square');
+
+                                }
+
+                            }
+                        },
+                        {
+                            extend: 'spacer',
+                            style: 'bar'
+                        },
                         {
                             text: '<i class="fas fa-cog"></i>&nbsp;Generate',
                             className: 'btn-primary',
@@ -149,7 +179,7 @@ table thead tr#filterRow th input {
                                     }));
 
                                     $.ajax({
-                                        url: `/redirect_statement`,
+                                        url: `/redirect_statement?draft=${draft_inclusion}`,
                                         method: 'POST',
                                         contentType: 'application/json',
                                         data: JSON.stringify(selectedRows),
