@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %} Statement {% endblock %}
+{% block title %} Statement | {{statement_id}} {% endblock %}
 
 {% block content %}
 
@@ -264,12 +264,13 @@ tr.dtrg-end th{
                                     margin: [0, 0, 0, 10]
                                 }); 
 
-                                // 2. Build content with explicit styles
+                                // 2. Build content for the first table
                                 var rows = [];
                                 var currentGroup = null;
                                 var currentSubGroup = null;
-                                var currency = null;
-                                var groupTotal = 0;
+                                var subgroupAccumulatedTotal = 0; // Renamed for clarity: this is the total for the currently processed subgroup within the main table
+                                var tenantTotals = {}; // Object to store totals for each tenant for the summary table
+                                var grandTotal = 0; // For the overall grand total
 
                                 const hostname = window.location.hostname;
                                 const protocol = window.location.protocol;
@@ -278,16 +279,12 @@ tr.dtrg-end th{
                                 let PDF_URL = '';
 
                                 if (port != null) {
-
                                     PDF_URL = protocol + '//' + hostname + ':' + port;
-
                                 } else {
-
                                     PDF_URL = protocol + '//' + hostname;
-
                                 }
 
-                                // Add column headers
+                                // Add column headers for the main table
                                 rows.push([
                                     { text: 'Organization', style: 'tableHeader' },
                                     { text: 'Invoice No', style: 'tableHeader' },
@@ -299,135 +296,248 @@ tr.dtrg-end th{
                                     var row = this.data();
                                     var group = row.Contact.Name;
                                     var subgroup = row.Tenant;
+                                    var amountDue = parseFloat(row.AmountDue);
 
+                                    // Accumulate total for the separate summary table
+                                    if (!tenantTotals[subgroup]) {
+                                        tenantTotals[subgroup] = 0;
+                                    }
+                                    tenantTotals[subgroup] += amountDue;
+                                    grandTotal += amountDue;
+
+                                    // Logic for the first table's grouping and subgrouping
                                     if (group !== currentGroup) {
                                         if (currentGroup !== null) {
+                                            // If there was a previous subgroup, add its total before the new group header
                                             if (currentSubGroup !== null) {
-
-                                                if (currentSubGroup === 'Macross SG'){
-
-                                                    currency = 'SGD';
-
-                                                } else {
-
-                                                    currency = 'RM';
-
-                                                }
-
-                                                // Add total row (no background)
+                                                let currency = (currentSubGroup === 'Macross SG') ? 'SGD' : 'RM';
                                                 rows.push([
                                                     '', '',
-                                                    { text: 'Total for '+ currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
-                                                    { text: groupTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                                    { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
+                                                    { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true }
                                                 ]);
                                             }
                                         }
-                                        // Add NEW GROUP HEADER with grey
+                                        // Add NEW GROUP HEADER with purple background
                                         rows.push([
-                                            { 
-                                                text: group, 
-                                                colSpan: 4, 
+                                            {
+                                                text: group,
+                                                colSpan: 4,
                                                 style: 'groupHeader',
                                                 margin: [0, 5, 0, 5] // Add spacing
                                             },
                                             '', '', ''
                                         ]);
                                         currentGroup = group;
-                                        currentSubGroup = null;
-                                        groupTotal = 0;
+                                        currentSubGroup = null; // Reset subgroup when main group changes
+                                        subgroupAccumulatedTotal = 0; // Reset subgroup total for the new main group
                                     }
 
                                     if (subgroup !== currentSubGroup) {
                                         // If it's not the very first subgroup within this main group, add previous subgroup's total
                                         if (currentSubGroup !== null) {
-
-                                            if (currentSubGroup === 'Macross SG'){
-
-                                                currency = 'SGD';
-
-                                            } else {
-
-                                                currency = 'RM';
-
-                                            }
-
+                                            let currency = (currentSubGroup === 'Macross SG') ? 'SGD' : 'RM';
                                             rows.push([
                                                 '', '',
-                                                { text: 'Total for '+ currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
-                                                { text: groupTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                                { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
+                                                { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true }
                                             ]);
                                         }
                                         // Set the new current subgroup and reset its total
                                         currentSubGroup = subgroup;
-                                        groupTotal = 0;
+                                        subgroupAccumulatedTotal = 0;
                                     }
 
-                                    if (row.Tenant != "Cheng & Associates"){
-
-                                        if (row.Status === "DRAFT"){
-
+                                    if (row.Tenant != "Cheng & Associates") {
+                                        if (row.Status === "DRAFT") {
                                             // Draft rows (force light grey background)
                                             rows.push([
                                                 { text: row.Tenant, style: 'cellDraftStyle' },
-                                                { 
+                                                {
                                                     text: [
                                                         { text: row.InvoiceNumber },
                                                         { text: "\n(DRAFT)", bold: true }
-                                                    ], 
-                                                    style: 'cellDraftStyle' 
+                                                    ],
+                                                    style: 'cellDraftStyle'
                                                 },
                                                 { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellDraftStyle', color: '#4286f4' },
-                                                { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountDraftStyle' }
+                                                { text: amountDue.toFixed(2), style: 'amountDraftStyle' }
                                             ]);
-
                                         } else {
-
                                             // Regular rows (force white background)
                                             rows.push([
                                                 { text: row.Tenant, style: 'cellStyle' },
                                                 { text: row.InvoiceNumber, style: 'cellStyle' },
                                                 { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellStyle', color: '#4286f4' },
-                                                { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountStyle' }
+                                                { text: amountDue.toFixed(2), style: 'amountStyle' }
                                             ]);
-
                                         }
-
                                     } else {
                                         // Regular rows (force white background)
                                         rows.push([
                                             { text: row.Tenant, style: 'cellStyle' },
                                             { text: row.InvoiceNumber, style: 'cellStyle' },
                                             { text: row.LineItems[0].Description, style: 'cellStyle' },
-                                            { text: parseFloat(row.AmountDue).toFixed(2), style: 'amountStyle' }
+                                            { text: amountDue.toFixed(2), style: 'amountStyle' }
                                         ]);
                                     }
 
-                                    
-
-                                    groupTotal += parseFloat(row.AmountDue);
+                                    subgroupAccumulatedTotal += amountDue; // Accumulate for the current subgroup
                                 });
 
-                                // Add final total
+                                // Add final total for the very last subgroup in the first table
                                 if (currentSubGroup !== null) {
-
-                                    if (currentSubGroup === 'Macross SG'){
-
-                                        currency = 'SGD';
-
-                                    } else {
-
-                                        currency = 'RM';
-
-                                    }
-
+                                    let currency = (currentSubGroup === 'Macross SG') ? 'SGD' : 'RM';
                                     rows.push([
                                         '', '',
-                                        { text: 'Total for '+ currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
-                                        { text: groupTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                        { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
+                                        { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true }
                                     ]);
                                 }
 
-                                // 3. Define explicit styles
+                                doc.content[1].table = {
+                                    body: rows,
+                                    widths: ['15%','17%','48%','20%']
+                                }
+
+                                doc.content.splice(2, 1, {
+                                    text: [
+                                            { text: '\n\n- - Please refer to the final page of the document for the totals and payment methods - -', bold:true, alignment: 'center'},
+                                    ]
+                                });
+
+                                // Create and add the tenant summary table
+                                var summaryTableRows = [];
+                                summaryTableRows.push([
+                                    { text: 'Tenant', style: 'tableHeader', fillColor: '#d4bcf5' }, // Added a light grey fill for summary header
+                                    { text: 'Total Amount Due', style: 'tableHeader', alignment: 'right', fillColor: '#d4bcf5' }
+                                ]);
+
+                                let grandTotalRM = 0;
+                                let grandTotalSGD = 0;
+                                let rmTenants = [];
+                                let sgTenants = [];
+
+                                // Separate tenants by currency
+                                for (var tenant in tenantTotals) {
+                                    if (tenantTotals.hasOwnProperty(tenant)) {
+                                        if (tenant === 'Macross SG') {
+                                            sgTenants.push({ name: tenant, total: tenantTotals[tenant] });
+                                            grandTotalSGD += tenantTotals[tenant];
+                                        } else {
+                                            rmTenants.push({ name: tenant, total: tenantTotals[tenant] });
+                                            grandTotalRM += tenantTotals[tenant];
+                                        }
+                                    }
+                                }
+
+                                // Add RM tenants to the summary table
+                                rmTenants.forEach(function(tenantData) {
+                                    summaryTableRows.push([
+                                        { text: tenantData.name, style: 'cellStyle' },
+                                        { text: 'RM ' + tenantData.total.toFixed(2), style: 'amountStyle' }
+                                    ]);
+                                });
+
+                                // Add Grand Total for RM
+                                if (rmTenants.length > 0) { // Only show RM total if there are RM tenants
+                                    summaryTableRows.push([
+                                        { text: 'Grand Total (RM):', style: 'totalText', alignment: 'right', bold: true, colSpan: 1 }, // Ensure colSpan is 1 for the first cell
+                                        { text: grandTotalRM.toFixed(2), style: 'amountStyle', bold: true }
+                                    ]);
+                                    // Add a blank row for visual separation before SGD totals, if both exist
+                                    if (sgTenants.length > 0) {
+                                        summaryTableRows.push([
+                                            { text: '', style: 'tableHeader', fillColor: '#d4bcf5' }, 
+                                            { text: '', style: 'tableHeader', fillColor: '#d4bcf5' }
+                                        ]);
+                                    }
+                                }
+
+                                // Add SGD tenants to the summary table
+                                sgTenants.forEach(function(tenantData) {
+                                    summaryTableRows.push([
+                                        { text: tenantData.name, style: 'cellStyle' },
+                                        { text: 'SGD ' + tenantData.total.toFixed(2), style: 'amountStyle' }
+                                    ]);
+                                });
+
+                                // Add Grand Total for SGD
+                                if (sgTenants.length > 0) { // Only show SGD total if there are SGD tenants
+                                    summaryTableRows.push([
+                                        { text: 'Grand Total (SGD):', style: 'totalText', alignment: 'right', bold: true, colSpan: 1 }, // Ensure colSpan is 1 for the first cell
+                                        { text: grandTotalSGD.toFixed(2), style: 'amountStyle', bold: true }
+                                    ]);
+                                }
+
+                                doc.content.splice(3, 1, {
+                                        pageBreak: 'before', // This forces a new page before this content
+                                        stack: [
+                                            {
+                                                text: 'Totals by Organization', // Title for the summary table
+                                                bold: true,
+                                                fontSize: 14,
+                                                margin: [0, 0, 0, 10] // Margin below the title
+                                            },
+                                            {
+                                                table: {
+                                                    body: summaryTableRows,
+                                                    widths: ['80%', '20%']
+                                                },
+                                                layout: {
+                                                    // Define horizontal line width
+                                                    hLineWidth: function(i, node) {
+
+                                                        // Check if the current row or the previous row is a grand total row
+                                                        const isCurrentGrandTotal = node.table.body[i] &&
+                                                                                    node.table.body[i][0] &&
+                                                                                    node.table.body[i][0].text &&
+                                                                                    node.table.body[i][0].text.startsWith('Grand Total (');
+
+                                                        if (isCurrentGrandTotal) {
+                                                            return 1; // Thinner black line for grand total rows
+                                                        }
+
+                                                        return 1; // Default line width for other rows
+                                                    },
+                                                    // Define horizontal line color
+                                                    hLineColor: function(i, node) {
+                                                        // Always black for top and bottom table borders
+                                                        if (i === 0 || i === node.table.body.length) {
+                                                            return 'black';
+                                                        }
+
+                                                        const isCurrentGrandTotal = node.table.body[i] &&
+                                                                                    node.table.body[i][0] &&
+                                                                                    node.table.body[i][0].text &&
+                                                                                    node.table.body[i][0].text.startsWith('Grand Total (');
+
+                                                        if (isCurrentGrandTotal) {
+                                                            return 'black'; // Black color for grand total rows
+                                                        }
+
+                                                        return '#cccccc'; // Default color for other rows
+                                                    },
+                                                    // Define vertical line color
+                                                    vLineColor: function(i, node) {
+                                                        return (i === 0 || i === node.table.widths.length) ? 'black' : '#cccccc';
+                                                    },
+                                                    paddingLeft: function(i, node) { return 4; },
+                                                    paddingRight: function(i, node) { return 4; },
+                                                    paddingTop: function(i, node) { return 4; },
+                                                    paddingBottom: function(i, node) { return 4; }
+                                                }, // Added a layout for borders
+                                                dontBreakRows: true
+                                            },
+                                            // {
+                                            //     text: [
+                                            //             { text: '\n\n- - Please refer to the final page of the document for payment methods - -', bold:true, alignment: 'center'},
+                                            //     ]
+                                            // }
+                                        ]
+                                    }  
+                                );
+
                                 doc.styles = {
                                     groupHeader: {
                                         fillColor: '#d4bcf5', // Purfume color (Light Purple)
@@ -438,7 +548,7 @@ tr.dtrg-end th{
                                     tableHeader: {
                                         bold: true,
                                         fontSize: 11,
-                                        fillColor: '#ffffff', // White background
+                                        fillColor: '#ffffff', // White background (can be overridden by specific table layouts)
                                         color: 'black'
                                     },
                                     cellStyle: {
@@ -463,23 +573,17 @@ tr.dtrg-end th{
                                     }
                                 };
 
-                                // 4. Replace content
-                                doc.content[1].table = {
-                                    body: rows,
-                                    widths: ['15%','17%','48%','20%']
-                                }
-
-                                doc.content.splice(2, 1, {
-                                    text: [
-                                            { text: '\n\n- - Please refer to the final page of the document for payment methods - -', bold:true, alignment: 'center'},
-                                    ]
-                                }); 
+                                // doc.content.splice(2, 1, {
+                                //     text: [
+                                //             { text: '\n\n- - Please refer to the final page of the document for payment methods - -', bold:true, alignment: 'center'},
+                                //     ]
+                                // });
                             
                                 // --- ADD THE "LAST PAGE" CONTENT HERE ---
-                                doc.content.push({
-                                    pageBreak: 'before', // This forces a new page before this content
+                                doc.content.splice(4, 1, {
                                     text: [
-                                            { text: 'Payment Methods:', bold:true, fontSize: 12 },
+                                            { text: '\n\n' },
+                                            { text: 'Payment Methods', bold:true, fontSize: 14 },
 
                                             { text: '\n\nKindly send us a crossed cheque or credit payment to our respective companies (Indicate the invoice number as a reference):'},
 
