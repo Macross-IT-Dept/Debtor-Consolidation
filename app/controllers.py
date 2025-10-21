@@ -233,7 +233,8 @@ def redirect_statement():
 
                 elif tenant == "Cheng & Associates Secretarial PLT":
 
-                    Bukku_API = True
+                    # Bukku_API = True
+                    Xero_API = True
 
                     tenant_name = "Cheng & Associates"
 

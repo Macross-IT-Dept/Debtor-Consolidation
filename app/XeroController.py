@@ -53,6 +53,7 @@ def XeroTenants(access_token):
     Macross_SG = None
     CoMaker = None
     CT_Co = None
+    ChengAssociates = None
 
     for tenant in json_response:
         if tenant['tenantName'] == 'Macross Consultancy (M) Sdn Bhd':
@@ -63,8 +64,10 @@ def XeroTenants(access_token):
             CoMaker = tenant
         elif tenant['tenantName'] == 'C.T & Co (Ekoflora Branch)':
             CT_Co = tenant
+        elif tenant['tenantName'] == 'Cheng & Associates Secretarial PLT':
+            ChengAssociates = tenant
 
-    return {"Macross": Macross, "Macross SG": Macross_SG, "Co Maker": CoMaker, "C.T & Co": CT_Co}
+    return {"Macross": Macross, "Macross SG": Macross_SG, "Co Maker": CoMaker, "C.T & Co": CT_Co, "Cheng & Associates": ChengAssociates}
 
 # Xero API - Refresh Auth Token
 def XeroRefreshToken(refresh_token):
@@ -163,7 +166,8 @@ def XeroInvoiceRequests(data, draft_inclusion):
 
             elif contact['Tenant'] == "Cheng & Associates Secretarial PLT":
                 
-                continue
+                # continue
+                xero_tenant_id = xero_tenant['Cheng & Associates']['tenantId']
 
             get_url = ''
 

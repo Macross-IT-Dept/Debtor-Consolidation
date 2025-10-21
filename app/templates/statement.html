@@ -115,13 +115,17 @@ tr.dtrg-end th{
 
                         if (type === 'display' && data) {
 
-                            if (row.Tenant != "Cheng & Associates") {
+                            // if (row.Tenant != "Cheng & Associates") {
 
-                                const linkUrl = `/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`;
+                            //     const linkUrl = `/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`;
 
-                                return `<a href="${linkUrl}" target="_blank">${formattedData}</a>`;
+                            //     return `<a href="${linkUrl}" target="_blank">${formattedData}</a>`;
 
-                            }
+                            // }
+
+                            const linkUrl = `/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`;
+
+                            return `<a href="${linkUrl}" target="_blank">${formattedData}</a>`;
                             
                         }
                         return formattedData; 
@@ -250,21 +254,25 @@ tr.dtrg-end th{
                             },
                             customize: function (doc) {
                                  
-                                // 1. Force reset default styles
+                                // Force reset default styles
                                 doc.defaultStyle = {
                                     fillColor: '#ffffff', // WHITE background for all rows
                                     color: 'black',
                                     fontSize: 10
                                 };
 
+                                // Top right Logo
                                 doc.content.splice(0, 1, {
                                     image: 'data:image/png;base64,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',
                                     width: 175, // Adjust size as needed
                                     alignment: 'right',
                                     margin: [0, 0, 0, 10]
-                                }); 
+                                });
+                                
+                                // Overwriting default table index
+                                doc.content.splice(1, 1);
 
-                                // 2. Build content for the first table
+                                // Build content for the main table
                                 var rows = [];
                                 var currentGroup = null;
                                 var currentSubGroup = null;
@@ -312,11 +320,42 @@ tr.dtrg-end th{
                                             if (currentSubGroup !== null) {
                                                 let currency = (currentSubGroup === 'Macross SG') ? 'SGD' : 'RM';
                                                 rows.push([
-                                                    '', '',
-                                                    { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
-                                                    { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                                    { text: '', fillColor: '#f1e8fd' },
+                                                    { text: '', fillColor: '#f1e8fd' },
+                                                    { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right', fillColor: '#f1e8fd' },
+                                                    { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true, fillColor: '#f1e8fd' }
                                                 ]);
                                             }
+
+                                            var emptyRow = [
+                                                { 
+                                                    text: '', 
+                                                    border: [false, true, false, true], // Left: F, Top: T, Right: F, Bottom: T
+                                                    borderColor: ['black', 'black', 'black', 'black'], // All borders Black
+                                                    borderWidth: [0, 0.5, 0, 0.5] // Width for Left/Right is 0, Top/Bottom is 0.5
+                                                }, 
+                                                { 
+                                                    text: '', 
+                                                    border: [false, true, false, true], // Left: F, Top: T, Right: F, Bottom: T
+                                                    borderColor: ['black', 'black', 'black', 'black'], // All borders Black
+                                                    borderWidth: [0, 0.5, 0, 0.5] // Width for Left/Right is 0, Top/Bottom is 0.5
+                                                },
+                                                { 
+                                                    text: '', 
+                                                    border: [false, true, false, true], // Left: F, Top: T, Right: F, Bottom: T
+                                                    borderColor: ['black', 'black', 'black', 'black'], // All borders Black
+                                                    borderWidth: [0, 0.5, 0, 0.5] // Width for Left/Right is 0, Top/Bottom is 0.5
+                                                },
+                                                { 
+                                                    text: '', 
+                                                    border: [false, true, false, true], // Left: F, Top: T, Right: F, Bottom: T
+                                                    borderColor: ['black', 'black', 'black', 'black'], // All borders Black
+                                                    borderWidth: [0, 0.5, 0, 0.5] // Width for Left/Right is 0, Top/Bottom is 0.5
+                                                }
+                                            ];
+                                            emptyRow.isSpacerRow = true;
+                                            rows.push(emptyRow);
+
                                         }
                                         // Add NEW GROUP HEADER with purple background
                                         rows.push([
@@ -338,9 +377,10 @@ tr.dtrg-end th{
                                         if (currentSubGroup !== null) {
                                             let currency = (currentSubGroup === 'Macross SG') ? 'SGD' : 'RM';
                                             rows.push([
-                                                '', '',
-                                                { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
-                                                { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                                { text: '', fillColor: '#f1e8fd' },
+                                                { text: '', fillColor: '#f1e8fd' },
+                                                { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right', fillColor: '#f1e8fd' },
+                                                { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true, fillColor: '#f1e8fd' }
                                             ]);
                                         }
                                         // Set the new current subgroup and reset its total
@@ -348,8 +388,41 @@ tr.dtrg-end th{
                                         subgroupAccumulatedTotal = 0;
                                     }
 
-                                    if (row.Tenant != "Cheng & Associates") {
-                                        if (row.Status === "DRAFT") {
+                                    // if (row.Tenant != "Cheng & Associates") {
+                                    //     if (row.Status === "DRAFT") {
+                                    //         // Draft rows (force light grey background)
+                                    //         rows.push([
+                                    //             { text: row.Tenant, style: 'cellDraftStyle' },
+                                    //             {
+                                    //                 text: [
+                                    //                     { text: row.InvoiceNumber },
+                                    //                     { text: "\n(DRAFT)", bold: true }
+                                    //                 ],
+                                    //                 style: 'cellDraftStyle'
+                                    //             },
+                                    //             { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellDraftStyle', color: '#4286f4' },
+                                    //             { text: amountDue.toFixed(2), style: 'amountDraftStyle' }
+                                    //         ]);
+                                    //     } else {
+                                    //         // Regular rows (force white background)
+                                    //         rows.push([
+                                    //             { text: row.Tenant, style: 'cellStyle' },
+                                    //             { text: row.InvoiceNumber, style: 'cellStyle' },
+                                    //             { text: row.LineItems[0].Description, link: `${PDF_URL}/api/xero/invoices/pdf/${row.Tenant}/${row.InvoiceID}`, style: 'cellStyle', color: '#4286f4' },
+                                    //             { text: amountDue.toFixed(2), style: 'amountStyle' }
+                                    //         ]);
+                                    //     }
+                                    // } else {
+                                    //     // Regular rows (force white background)
+                                    //     rows.push([
+                                    //         { text: row.Tenant, style: 'cellStyle' },
+                                    //         { text: row.InvoiceNumber, style: 'cellStyle' },
+                                    //         { text: row.LineItems[0].Description, style: 'cellStyle' },
+                                    //         { text: amountDue.toFixed(2), style: 'amountStyle' }
+                                    //     ]);
+                                    // }
+
+                                    if (row.Status === "DRAFT") {
                                             // Draft rows (force light grey background)
                                             rows.push([
                                                 { text: row.Tenant, style: 'cellDraftStyle' },
@@ -372,41 +445,22 @@ tr.dtrg-end th{
                                                 { text: amountDue.toFixed(2), style: 'amountStyle' }
                                             ]);
                                         }
-                                    } else {
-                                        // Regular rows (force white background)
-                                        rows.push([
-                                            { text: row.Tenant, style: 'cellStyle' },
-                                            { text: row.InvoiceNumber, style: 'cellStyle' },
-                                            { text: row.LineItems[0].Description, style: 'cellStyle' },
-                                            { text: amountDue.toFixed(2), style: 'amountStyle' }
-                                        ]);
-                                    }
 
                                     subgroupAccumulatedTotal += amountDue; // Accumulate for the current subgroup
                                 });
 
-                                // Add final total for the very last subgroup in the first table
+                                // Add final total for the very last subgroup in the main table
                                 if (currentSubGroup !== null) {
                                     let currency = (currentSubGroup === 'Macross SG') ? 'SGD' : 'RM';
                                     rows.push([
-                                        '', '',
-                                        { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right' },
-                                        { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true }
+                                        { text: '', fillColor: '#f1e8fd' },
+                                        { text: '', fillColor: '#f1e8fd' },
+                                        { text: 'Total for ' + currentSubGroup + ' (' + currency + '):', style: 'totalText', alignment: 'right', fillColor: '#f1e8fd' },
+                                        { text: subgroupAccumulatedTotal.toFixed(2), style: 'amountStyle', bold: true, fillColor: '#f1e8fd' }
                                     ]);
                                 }
 
-                                doc.content[1].table = {
-                                    body: rows,
-                                    widths: ['15%','17%','48%','20%']
-                                }
-
-                                doc.content.splice(2, 1, {
-                                    text: [
-                                            { text: '\n\n- - Please refer to the final page of the document for the totals and payment methods - -', bold:true, alignment: 'center'},
-                                    ]
-                                });
-
-                                // Create and add the tenant summary table
+                                // Create and add summary table
                                 var summaryTableRows = [];
                                 summaryTableRows.push([
                                     { text: 'Organization', style: 'tableHeader', fillColor: '#d4bcf5' }, // Added a light grey fill for summary header
@@ -417,15 +471,26 @@ tr.dtrg-end th{
                                 let grandTotalSGD = 0;
                                 let rmTenants = [];
                                 let sgTenants = [];
+                                let tenant_name = '';
 
                                 // Separate tenants by currency
                                 for (var tenant in tenantTotals) {
                                     if (tenantTotals.hasOwnProperty(tenant)) {
                                         if (tenant === 'Macross SG') {
-                                            sgTenants.push({ name: tenant, total: tenantTotals[tenant] });
+                                            tenant_name = 'Macross Consultancy Pte Ltd';
+                                            sgTenants.push({ name: tenant_name, total: tenantTotals[tenant] });
                                             grandTotalSGD += tenantTotals[tenant];
                                         } else {
-                                            rmTenants.push({ name: tenant, total: tenantTotals[tenant] });
+                                            if (tenant === 'Macross'){
+                                                tenant_name = 'Macross Consultancy (M) Sdn Bhd';
+                                            } else if (tenant === 'Co Maker'){
+                                                tenant_name = 'Co Maker Sdn Bhd';
+                                            } else if (tenant === 'C.T & Co'){
+                                                tenant_name = 'C.T & Co';
+                                            } else if (tenant === 'Cheng & Associates'){
+                                                tenant_name = 'Cheng & Associates Secretarial PLT';
+                                            }
+                                            rmTenants.push({ name: tenant_name, total: tenantTotals[tenant] });
                                             grandTotalRM += tenantTotals[tenant];
                                         }
                                     }
@@ -433,17 +498,52 @@ tr.dtrg-end th{
 
                                 // Add RM tenants to the summary table
                                 rmTenants.forEach(function(tenantData) {
+                                    const tenantName = tenantData.name;
+                                    let bank_details = '';
+                                    if (tenantName === 'Macross Consultancy (M) Sdn Bhd'){
+                                        bank_details = 'HLB: 36500033777';
+                                    } else if (tenantName === 'Co Maker Sdn Bhd'){
+                                        bank_details = 'OCBC: 7161171467';
+                                    } else if (tenantName === 'C.T & Co'){
+                                        bank_details = 'OCBC: 7161159858';
+                                    } else if (tenantName === 'Cheng & Associates Secretarial PLT'){
+                                        bank_details = 'HLB: 37800089073';
+                                    }
+
                                     summaryTableRows.push([
-                                        { text: tenantData.name, style: 'cellStyle' },
-                                        { text: 'RM ' + tenantData.total.toFixed(2), style: 'amountStyle' }
+                                        { // 1. Use 'text' with an array to mix styles
+                                            text: [
+                                                // First part (Organization Name) - Regular style
+                                                { text: tenantName, style: 'cellStyle' },
+                                                
+                                                // Second part (Bank Number) - Bold style
+                                                { 
+                                                    text: ' (' + bank_details + ')', 
+                                                    style: 'cellStyle', // Maintain other base styles (like font size)
+                                                    bold: true,         // Add the bold property
+                                                    color: '#346cc5'
+                                                }
+                                            ] 
+                                        },
+                                        // { text: 'RM ' + tenantData.total.toFixed(2), style: 'amountStyle' }
+                                        { text: tenantData.total.toFixed(2), style: 'amountStyle' }
                                     ]);
                                 });
 
                                 // Add Grand Total for RM
                                 if (rmTenants.length > 0) { // Only show RM total if there are RM tenants
                                     summaryTableRows.push([
-                                        { text: 'Grand Total (RM):', style: 'totalText', alignment: 'right', bold: true, colSpan: 1 }, // Ensure colSpan is 1 for the first cell
-                                        { text: grandTotalRM.toFixed(2), style: 'amountStyle', bold: true }
+                                        { text: 'Grand Total:', style: 'totalText', alignment: 'right', bold: true, colSpan: 1 }, // Ensure colSpan is 1 for the first cell
+                                        { 
+                                            text: [
+                                                {   
+                                                    text: 'RM   ', alignment: 'right', bold: true
+                                                },
+                                                {
+                                                    text: grandTotalRM.toFixed(2), style: 'amountStyle', bold: true 
+                                                }
+                                            ]
+                                        }
                                     ]);
                                     // Add a blank row for visual separation before SGD totals, if both exist
                                     if (sgTenants.length > 0) {
@@ -456,27 +556,56 @@ tr.dtrg-end th{
 
                                 // Add SGD tenants to the summary table
                                 sgTenants.forEach(function(tenantData) {
+                                    const tenantName = tenantData.name;
+                                    let bank_details = '';
+                                    if (tenantName === 'Macross Consultancy Pte Ltd'){
+                                        bank_details = 'OCBC: 593074883001';
+                                    }
                                     summaryTableRows.push([
-                                        { text: tenantData.name, style: 'cellStyle' },
-                                        { text: 'SGD ' + tenantData.total.toFixed(2), style: 'amountStyle' }
+                                        { // 1. Use 'text' with an array to mix styles
+                                            text: [
+                                                // First part (Organization Name) - Regular style
+                                                { text: tenantName, style: 'cellStyle' },
+                                                
+                                                // Second part (Bank Number) - Bold style
+                                                { 
+                                                    text: ' (' + bank_details + ')', 
+                                                    style: 'cellStyle', // Maintain other base styles (like font size)
+                                                    bold: true,         // Add the bold property
+                                                    color: '#346cc5'
+                                                }
+                                            ] 
+                                        },
+                                        // { text: 'SGD ' + tenantData.total.toFixed(2), style: 'amountStyle' }
+                                        { text: tenantData.total.toFixed(2), style: 'amountStyle' }
                                     ]);
                                 });
 
                                 // Add Grand Total for SGD
                                 if (sgTenants.length > 0) { // Only show SGD total if there are SGD tenants
                                     summaryTableRows.push([
-                                        { text: 'Grand Total (SGD):', style: 'totalText', alignment: 'right', bold: true, colSpan: 1 }, // Ensure colSpan is 1 for the first cell
-                                        { text: grandTotalSGD.toFixed(2), style: 'amountStyle', bold: true }
+                                        { text: 'Grand Total:', style: 'totalText', alignment: 'right', bold: true, colSpan: 1 }, // Ensure colSpan is 1 for the first cell
+                                        { 
+                                            text: [
+                                                {   
+                                                    text: 'SGD   ', alignment: 'right', bold: true
+                                                },
+                                                {
+                                                    text: grandTotalSGD.toFixed(2), style: 'amountStyle', bold: true 
+                                                }
+                                            ]
+                                        }
                                     ]);
                                 }
 
-                                doc.content.splice(3, 1, {
-                                        pageBreak: 'before', // This forces a new page before this content
+                                // Display summary table at index 2
+                                doc.content.splice(2, 1, {
                                         stack: [
                                             {
-                                                text: 'Totals by Organization', // Title for the summary table
+                                                text: 'Summary of Outstanding by Organization', // Title for the summary table
                                                 bold: true,
                                                 fontSize: 14,
+                                                decoration: 'underline',
                                                 margin: [0, 0, 0, 10] // Margin below the title
                                             },
                                             {
@@ -487,18 +616,35 @@ tr.dtrg-end th{
                                                 layout: {
                                                     // Define horizontal line width
                                                     hLineWidth: function(i, node) {
+                                                        
+                                                        // 1. Get the content of the first cell in the current row (node.table.body[i][0])
+                                                        const cellContent = node.table.body[i] ? node.table.body[i][0] : null;
+                                                        let textToCheck = '';
 
-                                                        // Check if the current row or the previous row is a grand total row
-                                                        const isCurrentGrandTotal = node.table.body[i] &&
-                                                                                    node.table.body[i][0] &&
-                                                                                    node.table.body[i][0].text &&
-                                                                                    node.table.body[i][0].text.startsWith('Grand Total (');
+                                                        if (cellContent) {
 
-                                                        if (isCurrentGrandTotal) {
-                                                            return 1; // Thinner black line for grand total rows
+                                                            // 2. Determine if the content is a complex text array (like your organization name + bank number)
+                                                            if (Array.isArray(cellContent.text)) {
+                                                                // If it's an array, get the 'text' property of the FIRST element
+                                                                textToCheck = cellContent.text[0].text;
+                                                            } 
+                                                            // 3. Otherwise, assume it's a simple string or a simple text object
+                                                            else if (typeof cellContent.text === 'string') {
+                                                                textToCheck = cellContent.text;
+                                                            } else if (typeof cellContent === 'string') {
+                                                                textToCheck = cellContent;
+                                                            }
+                                                            
+                                                            // 4. Now, safely check if the extracted string starts with 'Grand Total ('
+                                                            const isCurrentGrandTotal = textToCheck.startsWith('Grand Total (');
+
+                                                            if (isCurrentGrandTotal) {
+                                                                return 0.5; // Thinner black line for grand total rows
+                                                            }
                                                         }
 
-                                                        return 1; // Default line width for other rows
+                                                        // Default line width for all other rows and borders
+                                                        return 0.5; 
                                                     },
                                                     // Define horizontal line color
                                                     hLineColor: function(i, node) {
@@ -507,10 +653,29 @@ tr.dtrg-end th{
                                                             return 'black';
                                                         }
 
-                                                        const isCurrentGrandTotal = node.table.body[i] &&
-                                                                                    node.table.body[i][0] &&
-                                                                                    node.table.body[i][0].text &&
-                                                                                    node.table.body[i][0].text.startsWith('Grand Total (');
+                                                        // --- Safety Check to avoid TypeError ---
+                                                        const cellContent = node.table.body[i] ? node.table.body[i][0] : null;
+                                                        let textToCheck = '';
+
+                                                        if (cellContent) {
+                                                            // 1. Check if the cell content is a complex object (text is an array)
+                                                            if (Array.isArray(cellContent.text)) {
+                                                                // Get the 'text' property of the FIRST element in the array
+                                                                textToCheck = cellContent.text[0].text;
+                                                            } 
+                                                            // 2. Otherwise, assume it's a simple text object
+                                                            else if (typeof cellContent.text === 'string') {
+                                                                textToCheck = cellContent.text;
+                                                            } 
+                                                            // 3. Or a plain string
+                                                            else if (typeof cellContent === 'string') {
+                                                                textToCheck = cellContent;
+                                                            }
+                                                        }
+                                                        // --- End of Safety Check ---
+
+                                                        // Now, safely check if the extracted string starts with 'Grand Total'
+                                                        const isCurrentGrandTotal = textToCheck.startsWith('Grand Total');
 
                                                         if (isCurrentGrandTotal) {
                                                             return 'black'; // Black color for grand total rows
@@ -518,25 +683,141 @@ tr.dtrg-end th{
 
                                                         return '#cccccc'; // Default color for other rows
                                                     },
+                                                    vLineWidth: function(i, node) {
+                                                        return (i === 0 || i === node.table.widths.length) ? 0.5 : 0;
+                                                    },
                                                     // Define vertical line color
                                                     vLineColor: function(i, node) {
                                                         return (i === 0 || i === node.table.widths.length) ? 'black' : '#cccccc';
                                                     },
-                                                    paddingLeft: function(i, node) { return 4; },
-                                                    paddingRight: function(i, node) { return 4; },
-                                                    paddingTop: function(i, node) { return 4; },
-                                                    paddingBottom: function(i, node) { return 4; }
+                                                    paddingLeft: function(i, node) { return 5; },
+                                                    paddingRight: function(i, node) { return 5; },
+                                                    paddingTop: function(i, node) { return 5; },
+                                                    paddingBottom: function(i, node) { return 5; }
                                                 }, // Added a layout for borders
                                                 dontBreakRows: true
-                                            },
-                                            // {
-                                            //     text: [
-                                            //             { text: '\n\n- - Please refer to the final page of the document for payment methods - -', bold:true, alignment: 'center'},
-                                            //     ]
-                                            // }
+                                            }
                                         ]
                                     }  
                                 );
+
+                                // Note at index 3
+                                doc.content.splice(3, 1, {
+                                    stack: [
+                                        {
+                                            text: [
+                                                { text: '\n\n' },
+                                                { 
+                                                    text: 'Note:', 
+                                                    bold: true, 
+                                                    fontSize: 14,
+                                                    decoration: 'underline'
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            // The 'ul' property creates the unordered list
+                                            ul: [
+                                                {
+                                                    text: [
+                                                        {text: 'Please indicate the '},
+                                                        {text: 'invoice number ', bold: true},
+                                                        {text: 'as a reference when making payment.'}
+                                                    ],
+                                                    margin: [0, 5, 0, 0]
+                                                },
+                                                {
+                                                    text: [
+                                                        {text: 'For '},
+                                                        {text: 'direct deposit', bold: true},
+                                                        {text: ', kindly '},
+                                                        {text: 'email / WhatsApp ', bold: true},
+                                                        {text: 'your remittance advice to '},
+                                                        {text: 'Finance Dept.', bold: true},
+                                                        {text: '\n( finance@macrossconsult.com / +60167107601 )', bold: true}
+
+                                                    ],
+                                                    margin: [0, 5, 0, 0]
+                                                },
+                                                {
+                                                    text: [
+                                                        {text: 'Cheques ', bold: true},
+                                                        {text: 'should be made payable to our '},
+                                                        {text: 'respective companies ', bold: true},
+                                                        {text: 'and '},
+                                                        {text: 'crossed A/C Payee ONLY.', bold: true}
+                                                    ],
+                                                    margin: [0, 5, 0, 0]
+                                                },
+                                            ]
+                                        }
+                                    ]
+                                });
+
+                                // Reminder of invoice breakdown at index 4
+                                doc.content.splice(4, 1, {
+                                    text: [
+                                            { text: '\n\n- - Please refer to the next page for the invoices breakdown - -', bold:true, alignment: 'center'},
+                                    ]
+                                });
+                                
+                                // Display main table at index 5
+                                doc.content.splice(5, 1, {
+                                    pageBreak: 'before',
+                                    stack: [
+                                        {
+                                            text: '\n\n'
+                                        },
+                                        {
+                                            text: 'Invoices Details Breakdown', // Title for the main table
+                                            bold: true,
+                                            fontSize: 14,
+                                            decoration: 'underline',
+                                            margin: [0, 0, 0, 10] // Margin below the title
+                                        },
+                                        {
+                                            table: {
+                                                body: rows,
+                                                widths: ['15%', '17%', '48%', '20%']
+                                            },
+                                            layout: {
+                                                // Define horizontal line width
+                                                hLineWidth: function(i, node) {
+
+                                                    return 0.5; // Default line width for other rows
+
+                                                },
+                                                // Define horizontal line color
+                                                hLineColor: function(i, node) {
+                                                    // Always black for top and bottom table borders
+                                                    if (i === 0 || i === node.table.body.length) {
+                                                        return 'black';
+                                                    }
+
+                                                    return '#dedcdc'; // Default color for other rows
+                                                },
+                                                vLineWidth: function(i, node) {
+                                                    // Check if it is the far-left (0) or far-right (node.table.widths.length) border.
+                                                    if (i === 0 || i === node.table.widths.length) {
+                                                        return 0.5; // Return the desired width (e.g., 1) for the black outer borders
+                                                    }
+                                                    
+                                                    // For all other internal vertical lines, return 0.
+                                                    return 0; // <-- Setting width to 0 ensures the line is invisible
+                                                },
+                                                // You can now keep your vLineColor simple:
+                                                vLineColor: function(i, node) {
+                                                    return (i === 0 || i === node.table.widths.length) ? 'black' : null; 
+                                                },
+                                                paddingLeft: function(i, node) { return 5; },
+                                                paddingRight: function(i, node) { return 5; },
+                                                paddingTop: function(i, node) { return 5; },
+                                                paddingBottom: function(i, node) { return 5; }
+                                            }, // Added a layout for borders
+                                        }
+                                    ]
+                                    
+                                });
 
                                 doc.styles = {
                                     groupHeader: {
@@ -572,70 +853,6 @@ tr.dtrg-end th{
                                         fillColor: '#ffffff' // White
                                     }
                                 };
-
-                                // doc.content.splice(2, 1, {
-                                //     text: [
-                                //             { text: '\n\n- - Please refer to the final page of the document for payment methods - -', bold:true, alignment: 'center'},
-                                //     ]
-                                // });
-                            
-                                // --- ADD THE "LAST PAGE" CONTENT HERE ---
-                                doc.content.splice(4, 1, {
-                                    text: [
-                                            { text: '\n\n' },
-                                            { text: 'Payment Methods', bold:true, fontSize: 14 },
-
-                                            { text: '\n\nKindly send us a crossed cheque or credit payment to our respective companies (Indicate the invoice number as a reference):'},
-
-                                            { text: '\n\n1. ' },
-                                            { text: 'Macross Consultancy (M) Sdn Bhd', bold:true},
-                                            { text: createStyledText('\nAccount Number: ', '365 000 33777') },
-                                            { text: createStyledText('\nBeneficiary Bank: ', 'Hong Leong Bank') },
-
-                                            { text: '\n\n2. ' },
-                                            { text: 'Macross Consultancy Pte Ltd', bold:true},
-                                            { text: createStyledText('\nAccount Number: ', '593074883001') },
-                                            { text: createStyledText('\nBeneficiary Bank: ', 'OCBC Bank') },
-                                            { text: createStyledText('\nBranch: ', 'OCBC Suntec City Branch') },
-
-                                            { text: '\n\n3. ' },
-                                            { text: 'Co Maker Sdn Bhd', bold:true},
-                                            { text: createStyledText('\nAccount Number: ', '7161171467') },
-                                            { text: createStyledText('\nBeneficiary Bank: ', 'OCBC Bank (Malaysia) Berhad') },
-
-                                            { text: '\n\n4. ' },
-                                            { text: 'C.T & Co', bold:true},
-                                            { text: createStyledText('\nAccount Number: ', '7161159858') },
-                                            { text: createStyledText('\nBeneficiary Bank: ', 'OCBC Bank (Malaysia) Berhad') },
-
-                                            { text: '\n\n5. ' },
-                                            { text: 'Cheng & Associates Secretarial PLT', bold:true},
-                                            { text: createStyledText('\nAccount Number: ', '37800089073') },
-                                            { text: createStyledText('\nBeneficiary Bank: ', 'Hong Leong Bank') },
-
-                                            // { text: '\n\n1. Macross Consultancy (M) Sdn Bhd \nA/C Number: ' },
-                                            // { text: createStyledText('365 000 33777', '\nBeneficiary Bank: ') },
-                                            // { text: createStyledText('Hong Leong Bank') },
-
-                                            // { text: '\n\n2. Macross Consultancy Pte Ltd \nA/C Number: ' },
-                                            // { text: createStyledText('593074883001', '\nBeneficiary Bank: ') },
-                                            // { text: createStyledText('OCBC Bank' ,'\nBranch: ') },
-                                            // { text: createStyledText('OCBC Suntec City Branch') },
-
-                                            // { text: '\n\n3. Co Maker Sdn Bhd \nA/C Number: ' },
-                                            // { text: createStyledText('7161171467', '\nBeneficiary Bank: ') },
-                                            // { text: createStyledText('OCBC Bank (Malaysia) Berhad') },
-
-                                            // { text: '\n\n4. C.T & Co \nA/C Number: ' },
-                                            // { text: createStyledText('7161159858', '\nBeneficiary Bank: ') },
-                                            // { text: createStyledText('OCBC Bank (Malaysia) Berhad') },
-
-                                            // { text: '\n\n5. Cheng & Associates Secretarial PLT \nA/C Number: ' },
-                                            // { text: createStyledText('37800089073', '\nBeneficiary Bank: ') },
-                                            // { text: createStyledText('Hong Leong Bank') },
-                                    ]
-                                });
-                            
                             }
                         }
                     ]
