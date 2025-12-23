@@ -173,11 +173,11 @@ def XeroInvoiceRequests(data, draft_inclusion):
 
             if draft_inclusion == 'true':
 
-                get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED,DRAFT&ContactIDs={contact['ContactID']}&where=AmountDue>0"
+                get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED,DRAFT&ContactIDs={contact['ContactID']}&where=AmountDue>0 AND Type==\"ACCREC\""
 
             elif draft_inclusion == 'false':
 
-                get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED&ContactIDs={contact['ContactID']}&where=AmountDue>0"
+                get_url = f"https://api.xero.com/api.xro/2.0/invoices?Statuses=AUTHORISED&ContactIDs={contact['ContactID']}&where=AmountDue>0 AND Type==\"ACCREC\""
 
             response = requests.get(get_url,
                                 headers = {
