@@ -53,23 +53,47 @@ table thead tr#filterRow th input {
 }
 
 </style>
-
-<div class="card" style="margin-top: 2em; margin-bottom: 2em;">
-    <div class="card-header">
-        <h2><b>Client List</b></h2>
+<div class="row my-3 g-3">
+    <div class="col-lg-4 col-md-4 col-12">
+        <div class="card h-100">
+            <div class="card-header"><h3><b>Client Groups</b></h3></div>
+            <div class="card-body">
+                <div class="card-body">
+                    <table id="ContactGroupTable" class="table table-hover table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Organization</th>
+                                <th>Contact Group Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <table id="ContactTable" class="table table-hover table-striped table-bordered" style="width:100%">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Contact Name</th>
-                    <th>Organization</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+
+    <div class="col-lg-8 col-md-8 col-12">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3><b>Client List</b></h3>
+            </div>
+            <div class="card-body">
+                <table id="ContactTable" class="table table-hover table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Contact Name</th>
+                            <th>Organization</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -86,7 +110,57 @@ table thead tr#filterRow th input {
 
         const spinner = document.getElementById("spinner");
         var draft_inclusion = false; 
-        
+
+        $('#ContactGroupTable').DataTable({
+            ajax: {
+                url: '/api/contactgroups',
+                dataSrc: ''
+            },
+            columns: [
+                {
+                    data: null,
+                    orderable: false,
+                    render: DataTable.render.select()
+                },
+                {data: 'Tenant', title: 'Organization'},
+                {data: 'Name', title: 'Contact Group Name'},
+            ],
+            columnDefs: [
+                { 
+                    targets: 0,
+                    width: '5%'
+                },
+                { 
+                    targets: 1,
+                    visible: false
+                },
+                { 
+                    targets: 2,
+                    width: '95%'
+                }  
+            ],
+            rowGroup: {
+                dataSrc: 'Tenant'
+            },
+            layout: {
+                topStart: 'search',
+                topEnd: null,
+                bottomStart: null,
+                bottomEnd: null
+            },
+            select: {
+                style: 'multi',
+                selector: 'td:first-child'
+            },
+            order: false,
+            fixedColumns: {
+                start: 1
+            },
+            scrollY: '50vh',
+            scrollCollapse: true,
+            pageLength: 100
+        });
+            
         $('#ContactTable').DataTable({
             ajax: {
                 url: '/api/contacts?bypass_cache=false',
@@ -166,75 +240,135 @@ table thead tr#filterRow th input {
                             className: 'btn-primary',
                             action: function ( e, dt, node, config ) {
 
-                                let selectedData = dt.rows('.selected').data().toArray();
+                                // let selectedData = dt.rows('.selected').data().toArray();
 
-                                if (selectedData.length > 0) {
+                                // if (selectedData.length > 0) {
 
-                                    spinner.removeAttribute('hidden');
+                                //     spinner.removeAttribute('hidden');
 
-                                    let selectedRows = selectedData.map(contact => ({
-                                        ContactID: contact.ContactID,
-                                        Tenant: contact.Tenant,
-                                        ContactName: contact.Name
-                                    }));
+                                //     let selectedRows = selectedData.map(contact => ({
+                                //         ContactID: contact.ContactID,
+                                //         Tenant: contact.Tenant,
+                                //         ContactName: contact.Name
+                                //     }));
 
-                                    $.ajax({
-                                        url: `/redirect_statement?draft=${draft_inclusion}`,
-                                        method: 'POST',
-                                        contentType: 'application/json',
-                                        data: JSON.stringify(selectedRows),
-                                        success: function (response) {
+                                //     $.ajax({
+                                //         url: `/redirect_statement?draft=${draft_inclusion}`,
+                                //         method: 'POST',
+                                //         contentType: 'application/json',
+                                //         data: JSON.stringify(selectedRows),
+                                //         success: function (response) {
 
-                                            spinner.setAttribute('hidden', '');
+                                //             spinner.setAttribute('hidden', '');
 
-                                            if (response.redirect_url) {
+                                //             if (response.redirect_url) {
                                                 
-                                                window.location.href = response.redirect_url;
+                                //                 window.location.href = response.redirect_url;
 
-                                            } else {
+                                //             } else {
 
-                                                alert('Error: Invalid redirect URL received.');
+                                //                 alert('Error: Invalid redirect URL received.');
                                                 
-                                            }
-                                        },
-                                        error: function (xhr, status, error) {
+                                //             }
+                                //         },
+                                //         error: function (xhr, status, error) {
 
-                                            spinner.setAttribute('hidden', '');
+                                //             spinner.setAttribute('hidden', '');
 
-                                            let errorMessage = 'An unknown error occurred.'; // Default error message
+                                //             let errorMessage = 'An unknown error occurred.'; // Default error message
 
-                                            try {
-                                                // Try to parse the responseText as JSON
-                                                const responseJson = JSON.parse(xhr.responseText);
+                                //             try {
+                                //                 // Try to parse the responseText as JSON
+                                //                 const responseJson = JSON.parse(xhr.responseText);
 
-                                                // Check if the 'error' key exists in the parsed JSON
-                                                if (responseJson && responseJson.error) {
-                                                    errorMessage = responseJson.error;
-                                                } else {
-                                                    // If it's JSON but doesn't have the 'error' key, show the raw JSON
-                                                    errorMessage = 'Server returned an error, but no specific message. Raw response: ' + xhr.responseText;
-                                                }
-                                            } catch (e) {
-                                                // If responseText is not valid JSON, it might be plain text or HTML
-                                                if (xhr.responseText) {
-                                                    errorMessage = 'Server error: ' + xhr.responseText;
-                                                } else {
-                                                    // Fallback for network issues or truly empty responses
-                                                    errorMessage = 'Network error or no response from server. Status: ' + status + ', Error: ' + error;
-                                                }
-                                            }
+                                //                 // Check if the 'error' key exists in the parsed JSON
+                                //                 if (responseJson && responseJson.error) {
+                                //                     errorMessage = responseJson.error;
+                                //                 } else {
+                                //                     // If it's JSON but doesn't have the 'error' key, show the raw JSON
+                                //                     errorMessage = 'Server returned an error, but no specific message. Raw response: ' + xhr.responseText;
+                                //                 }
+                                //             } catch (e) {
+                                //                 // If responseText is not valid JSON, it might be plain text or HTML
+                                //                 if (xhr.responseText) {
+                                //                     errorMessage = 'Server error: ' + xhr.responseText;
+                                //                 } else {
+                                //                     // Fallback for network issues or truly empty responses
+                                //                     errorMessage = 'Network error or no response from server. Status: ' + status + ', Error: ' + error;
+                                //                 }
+                                //             }
 
-                                            alert('Error: ' + errorMessage); // Display the specific error message
-                                            console.error('AJAX Error:', status, error);
-                                            console.error('Server Response:', xhr.responseText); // Log the full server response
+                                //             alert('Error: ' + errorMessage); // Display the specific error message
+                                //             console.error('AJAX Error:', status, error);
+                                //             console.error('Server Response:', xhr.responseText); // Log the full server response
+                                //         }
+                                //     });
+
+                                // } else if (selectedData.length == 0) {
+
+                                //     alert('No contact was selected.');
+
+                                // } 
+
+                                let selectedContacts = dt.rows('.selected').data().toArray().map(contact => ({
+                                    ContactID: contact.ContactID,
+                                    Tenant: contact.Tenant,
+                                    ContactName: contact.Name
+                                }));
+
+                                // 2. GET SELECTED GROUPS (New Cleaner Logic)
+                                let selectedGroups = [];
+                                
+                                // We access the Sidebar table's API directly
+                                var groupDt = $('#ContactGroupTable').DataTable();
+                                
+                                // We ask for the DATA of the selected rows (returns valid JSON objects)
+                                var groupData = groupDt.rows({ selected: true }).data().toArray();
+
+                                // Map it to the format backend needs
+                                selectedGroups = groupData.map(group => ({
+                                    TenantID: group.TenantID,       // Ensure your API JSON has this key!
+                                    GroupID: group.ContactGroupID,  // Ensure your API JSON has this key!
+                                    TenantName: group.Tenant        // This matches the 'Tenant' column data
+                                }));
+
+                                // 3. VALIDATION: Ensure at least ONE thing is selected (Individual OR Group)
+                                if (selectedContacts.length === 0 && selectedGroups.length === 0) {
+                                    alert('Please select at least one contact OR a contact group.');
+                                    return; // Stop here
+                                }
+
+                                // 4. PREPARE THE NEW PAYLOAD
+                                // We wrap both lists into one object
+                                let payload = {
+                                    manual_contacts: selectedContacts,
+                                    selected_groups: selectedGroups
+                                };
+
+                                // 5. SEND TO SERVER
+                                spinner.removeAttribute('hidden');
+
+                                $.ajax({
+                                    url: `/redirect_statement?draft=${draft_inclusion}`,
+                                    method: 'POST',
+                                    contentType: 'application/json',
+                                    data: JSON.stringify(payload), // <-- Sending the new structure
+                                    success: function (response) {
+                                        spinner.setAttribute('hidden', '');
+                                        if (response.redirect_url) {
+                                            window.location.href = response.redirect_url;
+                                        } else {
+                                            alert('Error: Invalid redirect URL received.');
                                         }
-                                    });
-
-                                } else if (selectedData.length == 0) {
-
-                                    alert('No contact was selected.');
-
-                                } 
+                                    },
+                                    error: function (xhr, status, error) {
+                                        // ... (Your existing error handling code remains exactly the same) ...
+                                        spinner.setAttribute('hidden', '');
+                                        // ... (Copy your existing error logic here) ...
+                                        console.error('AJAX Error:', status, error);
+                                        alert('An error occurred during generation.'); 
+                                    }
+                                });
                                 
                             }
                         }
@@ -255,6 +389,8 @@ table thead tr#filterRow th input {
                 start: 1
             },
             scrollX: true,
+            scrollY: '45vh',
+            scrollCollapse: true,
             initComplete: function() {
                 var api = this.api();
                 var $thead = $(api.table().header());

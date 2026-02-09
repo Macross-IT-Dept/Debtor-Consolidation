@@ -72,13 +72,25 @@ tr.dtrg-end th{
 
                                 tenant_key = "Co Maker";
 
-                            } else if (response. Tenant == "C.T & Co (Ekoflora Branch)") {
+                            } else if (response.Tenant == "C.T & Co (Ekoflora Branch)") {
 
                                 tenant_key = "C.T & Co";
 
-                            } else if (response. Tenant == "Cheng & Associates Secretarial PLT") {
+                            } else if (response.Tenant == "Cheng & Associates Secretarial PLT") {
 
                                 tenant_key = "Cheng & Associates";
+
+                            } else if (response.Tenant == "MEA | Macross Entrepreneurs Academy Sdn Bhd") {
+
+                                tenant_key = "MEA";
+
+                            } else if (response.Tenant == "MH | Macross Holding Sdn Bhd") {
+
+                                tenant_key = "Macross Holding";
+
+                            } else if (response.Tenant == "MTA | Macross T&A Sdn Bhd") {
+
+                                tenant_key = "Macross T&A";
 
                             }
 
@@ -489,6 +501,12 @@ tr.dtrg-end th{
                                                 tenant_name = 'C.T & Co';
                                             } else if (tenant === 'Cheng & Associates'){
                                                 tenant_name = 'Cheng & Associates Secretarial PLT';
+                                            } else if (tenant === 'MEA'){
+                                                tenant_name = 'MEA | Macross Entrepreneurs Academy Sdn Bhd';
+                                            } else if (tenant === 'Macross Holding'){
+                                                tenant_name = 'MH | Macross Holding Sdn Bhd';
+                                            } else if (tenant === 'Macross T&A'){
+                                                tenant_name = 'MTA | Macross T&A Sdn Bhd';
                                             }
                                             rmTenants.push({ name: tenant_name, total: tenantTotals[tenant] });
                                             grandTotalRM += tenantTotals[tenant];
@@ -508,6 +526,12 @@ tr.dtrg-end th{
                                         bank_details = 'OCBC: 7161159858';
                                     } else if (tenantName === 'Cheng & Associates Secretarial PLT'){
                                         bank_details = 'HLB: 37800089073';
+                                    } else if (tenantName === 'MEA | Macross Entrepreneurs Academy Sdn Bhd'){
+                                        bank_details = 'OCBC: 7161212449';
+                                    } else if (tenantName === 'MH | Macross Holding Sdn Bhd'){
+                                        bank_details = 'OCBC: -';
+                                    } else if (tenantName === 'MTA | Macross T&A Sdn Bhd'){
+                                        bank_details = 'OCBC: -';
                                     }
 
                                     summaryTableRows.push([

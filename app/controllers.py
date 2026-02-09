@@ -4,7 +4,7 @@ from app import db, cache, user_create_secret_key
 from .forms import LoginForm, CreateUserForm, EditUserForm
 from .models import User, Statement
 from flask_login import login_user, logout_user, login_required, current_user
-from .XeroController import XeroContactRequests, XeroInvoiceRequests
+from .XeroController import XeroContactRequests, XeroContactGroupRequests, XeroContactGroupMembers, XeroInvoiceRequests
 from .BukkuController import BukkuContactRequests, BukkuInvoiceRequests
 from functools import wraps
 from uuid import uuid4
@@ -165,35 +165,55 @@ def contacts_data():
 
     # return json_response
 
+# API - Retrieve Contact Groups Data
+@login_required
+def contactgroups_data():
+
+    response = XeroContactGroupRequests()
+
+    return response
+
 # Redirect to statement page
 @login_required
 def redirect_statement():
 
-    data = request.get_json()
+    raw_payload = request.get_json()
 
     draft_inclusion = request.args.get('draft')
 
+    selected_contacts = []
+    selected_groups = []
+
+    if isinstance(raw_payload, dict):
+        manual_contacts = raw_payload.get('manual_contacts', [])
+        selected_groups = raw_payload.get('selected_groups', [])
+    elif isinstance(raw_payload, list):
+        # Fallback for old code if needed
+        manual_contacts = raw_payload
+
+    unique_contacts_map = {}
+
+    for contact in manual_contacts:
+        c_id = contact.get('ContactID')
+        if c_id:
+            unique_contacts_map[c_id] = contact
+
+    if selected_groups:
+        for group in selected_groups:
+            t_id = group.get('TenantID')
+            g_id = group.get('GroupID')
+            t_name = group.get('TenantName') 
+
+            # Call helper to get invisible members
+            group_members = XeroContactGroupMembers(t_id, g_id, t_name)
+
+            for member in group_members:
+                # Add to map (Automatically handles duplicates)
+                unique_contacts_map[member['ContactID']] = member
+
+    data = list(unique_contacts_map.values())
+
     if data:
-
-        # Old method - Writting the data into a temp file
-
-        # dt = datetime.now()
-
-        # ts = int(str(datetime.timestamp(dt)).replace('.', ''))
-
-        # filename = f'temp_{uuid4()}_{ts}.json'
-        # filepath = os.path.join(os.path.abspath(os.getcwd()), "app", "temp", filename)
-
-        # directory = os.path.dirname(filepath)
-        # if not os.path.exists(directory):
-        #     os.makedirs(directory, exist_ok=True)
-
-        # try:
-        #     with open(filepath, 'w') as f:
-        #         json.dump(data, f)
-        
-        # except IOError as e:
-        #     return jsonify({'error': f'Error saving data to temporary file: {e}'}), 500
         
         description_dict = {}
 
@@ -237,6 +257,24 @@ def redirect_statement():
                     Xero_API = True
 
                     tenant_name = "Cheng & Associates"
+                
+                elif tenant == "MEA | Macross Entrepreneurs Academy Sdn Bhd":
+
+                    Xero_API = True
+
+                    tenant_name = "MEA"
+                
+                elif tenant == "MH | Macross Holding Sdn Bhd":
+
+                    Xero_API = True
+
+                    tenant_name = "Macross Holding"
+                
+                elif tenant == "MTA | Macross T&A Sdn Bhd":
+
+                    Xero_API = True
+
+                    tenant_name = "Macross T&A"
 
                 if tenant_name:
                     if tenant_name not in description_dict:
@@ -248,12 +286,6 @@ def redirect_statement():
         if Xero_API == True:
 
             xero_response = XeroInvoiceRequests(data, draft_inclusion)
-
-            # Old method - Calling the xero invoices API internally
-
-            # get_url = url_for('api.Xero_Invoices', filename=filename, _external=True)
-            # response = requests.get(get_url)
-            # json_response = response.json()
 
             if xero_response:
                 for item in xero_response:
