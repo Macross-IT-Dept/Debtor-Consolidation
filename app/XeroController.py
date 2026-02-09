@@ -54,6 +54,9 @@ def XeroTenants(access_token):
     CoMaker = None
     CT_Co = None
     ChengAssociates = None
+    Mea = None
+    Macross_Holding = None
+    Macross_TA = None
 
     for tenant in json_response:
         if tenant['tenantName'] == 'Macross Consultancy (M) Sdn Bhd':
@@ -66,8 +69,14 @@ def XeroTenants(access_token):
             CT_Co = tenant
         elif tenant['tenantName'] == 'Cheng & Associates Secretarial PLT':
             ChengAssociates = tenant
+        elif tenant['tenantName'] == 'MEA | Macross Entrepreneurs Academy Sdn Bhd':
+            Mea = tenant
+        elif tenant['tenantName'] == 'MH | Macross Holding Sdn Bhd':
+            Macross_Holding = tenant
+        elif tenant['tenantName'] == 'MTA | Macross T&A Sdn Bhd':
+            Macross_TA = tenant
 
-    return {"Macross": Macross, "Macross SG": Macross_SG, "Co Maker": CoMaker, "C.T & Co": CT_Co, "Cheng & Associates": ChengAssociates}
+    return {"Macross": Macross, "Macross SG": Macross_SG, "Co Maker": CoMaker, "C.T & Co": CT_Co, "Cheng & Associates": ChengAssociates, "MEA": Mea, "Macross Holding": Macross_Holding, "Macross T&A": Macross_TA}
 
 # Xero API - Refresh Auth Token
 def XeroRefreshToken(refresh_token):
@@ -93,26 +102,146 @@ def XeroRefreshToken(refresh_token):
 
 # Xero API - Retrieve Contacts
 def XeroContactRequests():
-    old_refresh_token = open(token_filepath, 'r').read()
+    
+    with open(token_filepath, 'r') as f:
+        old_refresh_token = f.read()
+
     new_tokens = XeroRefreshToken(old_refresh_token)
     xero_tenant= XeroTenants(new_tokens[0])
-    get_url = 'https://api.xero.com/api.xro/2.0/Contacts?where=IsCustomer=true'
 
+    session = requests.Session()
+    session.headers.update({
+        'Authorization': f'Bearer {new_tokens[0]}',
+        'Accept': 'application/json'
+    })
+    
+    get_url = 'https://api.xero.com/api.xro/2.0/Contacts?where=IsCustomer=true'
     final_response = []
 
     for key in xero_tenant:
-        response = requests.get(get_url,
-                            headers = {
-                                'Authorization': 'Bearer ' + new_tokens[0],
-                                'Xero-tenant-id': xero_tenant[key]['tenantId'],
-                                'Accept': 'application/json'
-                            })
+
+        session.headers.update({'Xero-tenant-id': xero_tenant[key]['tenantId']})
+        response = session.get(get_url)
         
         json_response = response.json()
         json_response["Tenant"] = xero_tenant[key]['tenantName']
         final_response.append(json_response)
 
     return final_response
+
+# # Xero API - Retrieve Contacts
+# def XeroContactGroupRequests():
+
+#     with open(token_filepath, 'r') as f:
+#         old_refresh_token = f.read()
+
+#     new_tokens = XeroRefreshToken(old_refresh_token)
+#     xero_tenant= XeroTenants(new_tokens[0])
+
+#     get_url = 'https://api.xero.com/api.xro/2.0/ContactGroups'
+#     final_response = []
+
+#     for key in xero_tenant:
+#         response = requests.get(get_url,
+#                             headers = {
+#                                 'Authorization': 'Bearer ' + new_tokens[0],
+#                                 'Xero-tenant-id': xero_tenant[key]['tenantId'],
+#                                 'Accept': 'application/json'
+#                             })
+        
+#         json_response = response.json()
+#         json_response["Tenant"] = xero_tenant[key]['tenantName']
+#         json_response["TenantID"] = xero_tenant[key]['tenantId']
+#         final_response.append(json_response)
+
+#     return final_response
+
+# Xero API - Retrieve Contacts
+def XeroContactGroupRequests():
+
+    with open(token_filepath, 'r') as f:
+        old_refresh_token = f.read()
+
+    new_tokens = XeroRefreshToken(old_refresh_token)
+    xero_tenant= XeroTenants(new_tokens[0])
+
+    session = requests.Session()
+    session.headers.update({
+        'Authorization': f'Bearer {new_tokens[0]}',
+        'Accept': 'application/json'
+    })
+
+    get_url = 'https://api.xero.com/api.xro/2.0/ContactGroups'
+    final_response = []
+
+    for key in xero_tenant:
+
+        session.headers.update({'Xero-tenant-id': xero_tenant[key]['tenantId']})
+
+        try:
+            response = session.get(get_url)
+            response.raise_for_status() # Check for 401, 403, 500 errors
+            
+            json_response = response.json()
+
+            if "ContactGroups" in json_response:
+                for group in json_response["ContactGroups"]:
+                    # Flatten the data: Inject Tenant info directly into the group object
+                    group["Tenant"] = xero_tenant[key]['tenantName']
+                    group["TenantID"] = xero_tenant[key]['tenantId']
+                
+                final_response.extend(json_response["ContactGroups"])
+
+            # tenant_object = {
+            #     "Tenant": xero_tenant[key]['tenantName'],
+            #     "TenantID": xero_tenant[key]['tenantId'],
+            #     "ContactGroups": json_response.get("ContactGroups", []) # Empty list if no groups found
+            # }
+        
+            # final_response.append(tenant_object)
+                
+        except requests.exceptions.RequestException as e:
+            # Log the error but keep processing other tenants
+            print(f"Error fetching for tenant {xero_tenant[key]['tenantName']}: {e}")
+
+    return final_response
+
+def XeroContactGroupMembers(tenant_id, group_id, tenant_name):
+
+    try:
+        # 1. Get a valid token (Reuse your existing token logic)
+        with open(token_filepath, 'r') as f:
+            old_refresh_token = f.read().strip()
+        new_tokens = XeroRefreshToken(old_refresh_token)
+
+        # 2. Call Xero API
+        url = f'https://api.xero.com/api.xro/2.0/ContactGroups/{group_id}'
+        headers = {
+            'Authorization': f'Bearer {new_tokens[0]}',
+            'Xero-tenant-id': tenant_id,
+            'Accept': 'application/json'
+        }
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            contacts = []
+            # Xero returns a list, we want the first group
+            group_data = response.json().get('ContactGroups', [{}])[0]
+            
+            # Extract contacts and format them to match your existing data structure
+            for c in group_data.get('Contacts', []):
+                contacts.append({
+                    "ContactID": c['ContactID'],
+                    "ContactName": c['Name'],
+                    "Tenant": tenant_name 
+                })
+            return contacts
+            
+    except Exception as e:
+        print(f"Error fetching group {group_id}: {e}")
+        
+    return []
 
 # Xero API - Retrieve invoices from selected contacts
 def XeroInvoiceRequests(data, draft_inclusion):
@@ -138,7 +267,9 @@ def XeroInvoiceRequests(data, draft_inclusion):
         
     if data:
 
-        old_refresh_token = open(token_filepath, 'r').read()
+        with open(token_filepath, 'r') as f:
+            old_refresh_token = f.read()
+
         new_tokens = XeroRefreshToken(old_refresh_token)
         xero_tenant= XeroTenants(new_tokens[0])
 
@@ -165,9 +296,21 @@ def XeroInvoiceRequests(data, draft_inclusion):
                 xero_tenant_id = xero_tenant['C.T & Co']['tenantId']
 
             elif contact['Tenant'] == "Cheng & Associates Secretarial PLT":
-                
+
                 # continue
                 xero_tenant_id = xero_tenant['Cheng & Associates']['tenantId']
+            
+            elif contact['Tenant'] == "MEA | Macross Entrepreneurs Academy Sdn Bhd":
+
+                xero_tenant_id = xero_tenant['MEA']['tenantId']
+            
+            elif contact['Tenant'] == "MH | Macross Holding Sdn Bhd":
+
+                xero_tenant_id = xero_tenant['Macross Holding']['tenantId']
+
+            elif contact['Tenant'] == "MTA | Macross T&A Sdn Bhd":
+
+                xero_tenant_id = xero_tenant['Macross T&A']['tenantId']
 
             get_url = ''
 
@@ -195,7 +338,10 @@ def XeroInvoiceRequests(data, draft_inclusion):
 # Xero API - Download invoice as PDF
 @sliding_window_rate_limit(limit=15, window=60)
 def XeroDownloadInvoice(tenant, invoice_id):
-    old_refresh_token = open(token_filepath, 'r').read()
+
+    with open(token_filepath, 'r') as f:
+        old_refresh_token = f.read()
+
     new_tokens = XeroRefreshToken(old_refresh_token)
     xero_tenant= XeroTenants(new_tokens[0])
     
